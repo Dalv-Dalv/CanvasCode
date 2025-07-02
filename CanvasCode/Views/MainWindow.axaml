@@ -17,7 +17,7 @@
     </Design.DataContext>
 
     <Grid>
-        <controls:Shader x:Name="ShaderHost" ShaderUri="avares://CanvasCode/Assets/Shaders/CanvasBG.sksl" Stretch="Fill"/>
+        <controls:Shader x:Name="ShaderHost" ShaderUri="avares://CanvasCode/Assets/Shaders/CanvasBG.sksl" Stretch="Fill" IsAnimated="True" AnimationFrameRate="5"/>
         
         <Border Classes="panel" Margin="4" Width="40" HorizontalAlignment="Left">
             <StackPanel>

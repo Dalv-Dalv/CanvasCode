@@ -12,12 +12,13 @@ float smoothstep(float edge0, float edge1, float x){
 
 float4 main(float2 fragCoord) {
     float2 uv = fract(fragCoord / 100.0);
+    float2 screenUV = fragCoord / iResolution;
 	uv = uv * 2 - float2(1.0);
 	uv = abs(uv);
 	
 	float dist = length(uv) - 0.03;
 	
-	float3 col = 0.5 + 0.5*cos(iTime+float3(uv,0)+float3(0,2,4)) * 0.11;
+	float3 col = 0.5 + 0.5*cos(iTime * 0.25 +float3(screenUV,0)+float3(0,2,4)) * 0.11;
 	
 	if(dist > 0){
 		col = float3(0.122, 0.125, 0.137);

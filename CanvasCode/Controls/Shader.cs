@@ -1,4 +1,4 @@
-﻿// https://avaloniaui.net/blog/avalonia-with-fragment-shaders
+﻿// Modified https://avaloniaui.net/blog/avalonia-with-fragment-shaders
 
 using System;
 using System.IO;
@@ -20,13 +20,16 @@ public class Shader : UserControl {
 		Size? ShaderSize = default,
 		Size? Size = default,
 		Stretch? Stretch = default,
-		StretchDirection? StretchDirection = default);
+		StretchDirection? StretchDirection = default,
+		bool? IsAnimated = default,
+		double? FrameRate = default);
 
 	private enum HandlerCommand {
 		Start,
 		Stop,
 		Update,
-		Dispose
+		Dispose,
+		UpdateAnimation
 	}
 
 	private const float DefaultShaderLength = 512;
@@ -54,6 +57,12 @@ public class Shader : UserControl {
 		AvaloniaProperty.Register<Shader, double>(
 			nameof(ShaderHeight),
 			DefaultShaderLength);
+	
+	public static readonly StyledProperty<bool> IsAnimatedProperty =
+		AvaloniaProperty.Register<Shader, bool>(nameof(IsAnimated));
+
+	public static readonly StyledProperty<double> AnimationFrameRateProperty =
+		AvaloniaProperty.Register<Shader, double>(nameof(AnimationFrameRate));
 
 	public Stretch Stretch {
 		get => GetValue(StretchProperty);
@@ -80,6 +89,16 @@ public class Shader : UserControl {
 		set => SetValue(ShaderHeightProperty, value);
 	}
 
+	public bool IsAnimated {
+		get =>  GetValue(IsAnimatedProperty);
+		set =>  SetValue(IsAnimatedProperty, value);
+	}
+
+	public double AnimationFrameRate {
+		get =>  GetValue(AnimationFrameRateProperty);
+		set => SetValue(AnimationFrameRateProperty, value);
+	}
+
 	static Shader() {
 		AffectsRender<Shader>(ShaderUriProperty,
 			StretchProperty,
@@ -92,6 +111,16 @@ public class Shader : UserControl {
 			StretchDirectionProperty,
 			ShaderWidthProperty,
 			ShaderHeightProperty);
+		
+		IsAnimatedProperty.Changed.AddClassHandler<Shader>((s, e) => s.UpdateAnimation());
+		AnimationFrameRateProperty.Changed.AddClassHandler<Shader>((s, e) => s.UpdateAnimation());
+	}
+	
+	private void UpdateAnimation() {
+		_customVisual?.SendHandlerMessage(new ShaderDrawPayload(
+			HandlerCommand.UpdateAnimation,
+			IsAnimated: IsAnimated,
+			FrameRate: AnimationFrameRate));
 	}
 
 	private Size GetShaderSize() {
@@ -177,7 +206,9 @@ public class Shader : UserControl {
 				GetShaderSize(),
 				Bounds.Size,
 				Stretch,
-				StretchDirection));
+				StretchDirection,
+				IsAnimated, 
+				AnimationFrameRate));
 
 		InvalidateVisual();
 	}
@@ -202,11 +233,15 @@ public class Shader : UserControl {
 		private SKRuntimeEffect? _effect;
 		private bool _isDisposed;
 
+		private bool _isAnimated;
+		private TimeSpan _frameInterval;
+		private TimeSpan _lastFrameTime;
+
 		public override void OnMessage(object message) {
 			if (message is not ShaderDrawPayload msg) return;
 
 			switch (msg) {
-				case { HandlerCommand: HandlerCommand.Start, ShaderCode: { } uri, ShaderSize: { } shaderSize, Size: { } size, Stretch: { } st, StretchDirection: { } sd }: {
+				case { HandlerCommand: HandlerCommand.Start, ShaderCode: { } uri, ShaderSize: { } shaderSize, Size: { } size, Stretch: { } st, StretchDirection: { } sd, IsAnimated: { } anim, FrameRate: { } rate }: {
 					using var stream = AssetLoader.Open(uri);
 					using var txt = new StreamReader(stream);
 
@@ -220,7 +255,15 @@ public class Shader : UserControl {
 					_boundsSize = size;
 					_stretch = st;
 					_stretchDirection = sd;
-					RegisterForNextAnimationFrameUpdate();
+					
+					_isAnimated = anim;
+					_frameInterval = rate > 0 ? TimeSpan.FromSeconds(1.0 / rate) : TimeSpan.Zero;
+                    
+					if (_isAnimated) {
+						RegisterForNextAnimationFrameUpdate();
+					} else {
+						Invalidate(); // Draw once for static shaders
+					}
 					break;
 				}
 				case { HandlerCommand: HandlerCommand.Update, ShaderSize: { } shaderSize, Size: { } size, Stretch: { } st, StretchDirection: { } sd }: {
@@ -228,7 +271,16 @@ public class Shader : UserControl {
 					_boundsSize = size;
 					_stretch = st;
 					_stretchDirection = sd;
-					RegisterForNextAnimationFrameUpdate();
+					Invalidate();
+					break;
+				}
+				case { HandlerCommand: HandlerCommand.UpdateAnimation, IsAnimated: { } anim, FrameRate: { } rate }: {
+					_isAnimated = anim;
+					_frameInterval = rate > 0 ? TimeSpan.FromSeconds(1.0 / rate) : TimeSpan.Zero;
+					// If animation was just turned on, kick off the loop.
+					if (_isAnimated) {
+						RegisterForNextAnimationFrameUpdate();
+					}
 					break;
 				}
 				case { HandlerCommand: HandlerCommand.Stop }: {
@@ -243,9 +295,18 @@ public class Shader : UserControl {
 		}
 
 		public override void OnAnimationFrameUpdate() {
-			if (!_running || _isDisposed)
+			if (!_running || !_isAnimated || _isDisposed)
 				return;
 
+			var now = CompositionNow;
+            
+			// Throttling logic: If not enough time has passed, skip this frame.
+			if (_frameInterval > TimeSpan.Zero && (now - _lastFrameTime) < _frameInterval) {
+				RegisterForNextAnimationFrameUpdate();
+				return;
+			}
+            
+			_lastFrameTime = now;
 			Invalidate();
 			RegisterForNextAnimationFrameUpdate();
 		}
@@ -261,7 +322,7 @@ public class Shader : UserControl {
 
 			_uniforms ??= new SKRuntimeEffectUniforms(_effect);
 
-			_uniforms["iTime"] = (float)CompositionNow.TotalSeconds;
+			if(_isAnimated) _uniforms["iTime"] = (float)CompositionNow.TotalSeconds;
 			_uniforms["iResolution"] = new[] { targetWidth, targetHeight };
 
 			using (var paint = new SKPaint())
