@@ -1,6 +1,8 @@
-﻿namespace CanvasCode.ViewModels;
+﻿using System.ComponentModel;
+using System.Threading.Tasks;
 
-public partial class MainWindowViewModel : ViewModelBase
-{
-    public string Greeting { get; } = "Welcome to Avalonia!";
+namespace CanvasCode.ViewModels;
+
+public partial class MainWindowViewModel : ViewModelBase {
+	
 }

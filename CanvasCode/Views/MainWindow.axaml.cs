@@ -1,4 +1,6 @@
+using System;
 using System.Diagnostics;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 
@@ -9,7 +11,19 @@ public partial class MainWindow : Window {
 		InitializeComponent();
 	}
 
-	private void Button_OnClick(object? sender, RoutedEventArgs e) {
-		Debug.WriteLine("Click!");
+	protected override void OnResized(WindowResizedEventArgs e) {
+		base.OnResized(e);
+		ShaderHost.ShaderWidth = e.ClientSize.Width;
+		ShaderHost.ShaderHeight = e.ClientSize.Height;
 	}
+	
+	// protected override void OnLoaded(RoutedEventArgs e) {
+	// 	base.OnLoaded(e);
+	// 	ShaderHost.Start();
+	// }
+	//
+	// protected override void OnUnloaded(RoutedEventArgs e) {
+	// 	base.OnUnloaded(e);
+	// 	ShaderHost.Stop();
+	// }
 }

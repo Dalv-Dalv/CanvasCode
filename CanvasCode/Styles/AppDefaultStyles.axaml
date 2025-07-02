@@ -1,0 +1,16 @@
+﻿<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Design.PreviewWith>
+        <Border Padding="20" Background="#1F2023">
+            <Border Classes="panel" Width="50" Height="50"/>
+        </Border>
+    </Design.PreviewWith>
+
+    <Style Selector="Border.panel">
+        <Setter Property="Background" Value="{DynamicResource PanelColor}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource PanelHighlight}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="8"/>
+        <Setter Property="BoxShadow" Value="0 0 40 0 #00f0f8ff, 0 0 20 0 #10f0f8ff"></Setter>
+    </Style>
+</Styles>

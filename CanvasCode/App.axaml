@@ -11,6 +11,22 @@
   
     <Application.Styles>
         <FluentTheme/>
+        <StyleInclude Source="Styles/AppDefaultStyles.axaml"></StyleInclude>
     </Application.Styles>
+             
+    <Application.Resources>
+        <FontFamily x:Key="PhosphorFill">Assets/Fonts/Phosphor-Fill.ttf#Phosphor-Fill</FontFamily>
+        <FontFamily x:Key="PhosphorRegular">Assets/Fonts/Phosphor.ttf#Phosphor</FontFamily>
+        
+        <SolidColorBrush x:Key="PrimaryBackground">#1F2023</SolidColorBrush>
+        
+        <SolidColorBrush x:Key="PanelColor">#2D2F33</SolidColorBrush>
+        <SolidColorBrush x:Key="PanelHighlight">#3C3F45</SolidColorBrush>
+        
+        <SolidColorBrush x:Key="PrimaryShadow">#10f0f8ff</SolidColorBrush> <!-- These dont work in boxshadow, idk -->
+        <SolidColorBrush x:Key="SecondaryShadow">#30f0f8ff</SolidColorBrush> <!-- These dont work in boxshadow, idk -->
+        
+        <SolidColorBrush x:Key="PrimaryText">#EEE</SolidColorBrush>
+    </Application.Resources>
     
 </Application>

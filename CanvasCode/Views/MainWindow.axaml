@@ -6,6 +6,7 @@
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
         x:Class="CanvasCode.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
+        xmlns:controls="using:CanvasCode.Controls"
         Icon="/Assets/avalonia-logo.ico"
         Title="CanvasCode">
 
@@ -15,6 +16,13 @@
         <vm:MainWindowViewModel/>
     </Design.DataContext>
 
-    <Button HorizontalAlignment="Center" Click="Button_OnClick">Calculate</Button>
-
+    <Grid>
+        <controls:Shader x:Name="ShaderHost" ShaderUri="avares://CanvasCode/Assets/Shaders/CanvasBG.sksl" Stretch="Fill"/>
+        
+        <Border Classes="panel" Margin="4" Width="40" HorizontalAlignment="Left">
+            <StackPanel>
+                <Label FontFamily="{StaticResource PhosphorRegular}" Content="&#xe236;" Foreground="{StaticResource PrimaryText}" FontSize="32"/>
+            </StackPanel>
+        </Border>
+    </Grid>
 </Window>
