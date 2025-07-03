@@ -3,10 +3,11 @@
         xmlns:vm="using:CanvasCode.ViewModels"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:controls="using:CanvasCode.Controls"
+        xmlns:paz="using:Avalonia.Controls.PanAndZoom"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
         x:Class="CanvasCode.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
-        xmlns:controls="using:CanvasCode.Controls"
         Icon="/Assets/avalonia-logo.ico"
         Title="CanvasCode">
 
@@ -19,10 +20,43 @@
     <Grid>
         <controls:Shader x:Name="ShaderHost" ShaderUri="avares://CanvasCode/Assets/Shaders/CanvasBG.sksl" Stretch="Fill" IsAnimated="True" AnimationFrameRate="5"/>
         
-        <Border Classes="panel" Margin="4" Width="40" HorizontalAlignment="Left">
-            <StackPanel>
-                <Label FontFamily="{StaticResource PhosphorRegular}" Content="&#xe236;" Foreground="{StaticResource PrimaryText}" FontSize="32"/>
-            </StackPanel>
-        </Border>
+        
+        
+        <paz:ZoomBorder x:Name="MainCanvas" PointerPressed="MainCanvas_OnPointerPressed" PointerReleased="MainCanvas_OnPointerReleased" PointerMoved="MainCanvas_OnPointerMoved" ZoomChanged="MainCanvas_OnZoomChanged" 
+                        Stretch="None" ClipToBounds="True" Focusable="True" PanButton="Left" MinZoomX="0.1" MinZoomY="0.1" MaxZoomX="10" MaxZoomY="10">
+            <Canvas>
+                <controls:CanvasWindow Canvas.Top="50" Canvas.Left="200" Background="{StaticResource PanelHighlight}" Width="200" Height="200" MinHeight="100" MinWidth="100"
+                                       CornerRadius="8">
+                    <Border Margin="2 20 2 2" Background="{StaticResource PanelColor}"
+                            CornerRadius="3 3 6.5 6.5"></Border>
+                </controls:CanvasWindow>
+            </Canvas>
+        </paz:ZoomBorder>
+        
+        
+        
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="0.25*" MinWidth="100" MaxWidth="600"/>
+                <ColumnDefinition Width="6"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <Border Grid.Column="0" Classes="panel" Margin="4 4 -2 4" HorizontalAlignment="Stretch">
+                <Grid Grid.Column="0" RowDefinitions="Auto, *">
+                    <Grid Grid.Row="0" ColumnDefinitions="Auto, *, Auto">
+                        <StackPanel Grid.Column="1" Orientation="Horizontal">
+                            <Button Classes="panelButton" FontFamily="{StaticResource PhosphorRegular}" Content="&#xE236;" FontSize="20" Padding="8 6 6 6"/>
+                            <Button Classes="panelButton" FontFamily="{StaticResource PhosphorRegular}" Content="&#xE256;" FontSize="20" Padding="6"/>
+                        </StackPanel>
+                
+                        <Button Grid.Column="2" Classes="panelButton" FontFamily="{StaticResource PhosphorRegular}" Content="&#xE32A;" FontSize="20" Padding="6 6 8 6"/>
+                    </Grid>
+                    <StackPanel Grid.Row="1" Orientation="Vertical">
+                        <Rectangle Classes="horizontalSeparator"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+            <GridSplitter Grid.Column="1" Background="Transparent"  ResizeDirection="Columns" Margin="0 4"/>
+        </Grid>
     </Grid>
 </Window>

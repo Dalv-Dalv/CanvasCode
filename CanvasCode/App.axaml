@@ -19,6 +19,7 @@
         <FontFamily x:Key="PhosphorRegular">Assets/Fonts/Phosphor.ttf#Phosphor</FontFamily>
         
         <SolidColorBrush x:Key="PrimaryBackground">#1F2023</SolidColorBrush>
+        <SolidColorBrush x:Key="PrimarySeparator">#7F3C3F45</SolidColorBrush>
         
         <SolidColorBrush x:Key="PanelColor">#2D2F33</SolidColorBrush>
         <SolidColorBrush x:Key="PanelHighlight">#3C3F45</SolidColorBrush>

@@ -2,7 +2,11 @@ using System;
 using System.Diagnostics;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.PanAndZoom;
+using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.Media;
+using CanvasCode.ViewModels;
 
 namespace CanvasCode.Views;
 
@@ -16,14 +20,50 @@ public partial class MainWindow : Window {
 		ShaderHost.ShaderWidth = e.ClientSize.Width;
 		ShaderHost.ShaderHeight = e.ClientSize.Height;
 	}
+
+	private bool isDraggingCanvas = false;
+	private void MainCanvas_OnPointerPressed(object? sender, PointerPressedEventArgs e) {
+		if (!e.Properties.IsLeftButtonPressed) return;
+		
+		isDraggingCanvas = true;
+	}
+	private void MainCanvas_OnPointerReleased(object? sender, PointerReleasedEventArgs e) {
+		if (e.InitialPressMouseButton != MouseButton.Left) return;
+		
+		isDraggingCanvas = false;
+	}
+	private void MainCanvas_OnPointerMoved(object? sender, PointerEventArgs e) {
+		if (!isDraggingCanvas || DataContext is not MainWindowViewModel vm) return;
+		
+		ShaderHost.SetUniform("posx", (float)MainCanvas.OffsetX);
+		ShaderHost.SetUniform("posy", (float)MainCanvas.OffsetY);
+	}
+	private void MainCanvas_OnZoomChanged(object sender, ZoomChangedEventArgs e) {
+		if (DataContext is not MainWindowViewModel vm) return;
+	}
+
 	
-	// protected override void OnLoaded(RoutedEventArgs e) {
-	// 	base.OnLoaded(e);
-	// 	ShaderHost.Start();
-	// }
-	//
-	// protected override void OnUnloaded(RoutedEventArgs e) {
-	// 	base.OnUnloaded(e);
-	// 	ShaderHost.Stop();
-	// }
+	
+	private bool isDraggingWindow = false;
+	private Point initialPos, initialClickPos;
+	private void DebugBorder_OnPointerPressed(object? sender, PointerPressedEventArgs e) {
+		if (!e.Properties.IsLeftButtonPressed || sender is not Border canvasWindow) return;
+		e.Handled = true; // Stop propagation so it doesnt drag the canvas as well
+		isDraggingWindow = true;
+		
+		
+		initialPos = new Point(Canvas.GetLeft(canvasWindow), Canvas.GetTop(canvasWindow));
+		initialClickPos = e.GetPosition(null);
+	}
+	private void DebugBorder_OnPointerReleased(object? sender, PointerReleasedEventArgs e) {
+		if (e.InitialPressMouseButton != MouseButton.Left || sender is not Border canvasWindow) return;
+		
+		isDraggingWindow = false;
+	}
+	private void DebugBorder_OnPointerMoved(object? sender, PointerEventArgs e) {
+		if(!isDraggingWindow || sender is not Border canvasWindow) return;
+
+		Canvas.SetLeft(canvasWindow, initialPos.X + (e.GetPosition(null).X - initialClickPos.X) * (1.0d / MainCanvas.ZoomX));
+		Canvas.SetTop(canvasWindow, initialPos.Y + (e.GetPosition(null).Y - initialClickPos.Y) * (1.0d / MainCanvas.ZoomY));
+	}
 }

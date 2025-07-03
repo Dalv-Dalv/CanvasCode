@@ -1,6 +1,7 @@
 ﻿// Modified https://avaloniaui.net/blog/avalonia-with-fragment-shaders
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Numerics;
 using Avalonia;
@@ -22,14 +23,16 @@ public class Shader : UserControl {
 		Stretch? Stretch = default,
 		StretchDirection? StretchDirection = default,
 		bool? IsAnimated = default,
-		double? FrameRate = default);
+		double? FrameRate = default,
+		Dictionary<string, object> Uniforms = default);
 
 	private enum HandlerCommand {
 		Start,
 		Stop,
 		Update,
 		Dispose,
-		UpdateAnimation
+		UpdateAnimation,
+		UpdateUniforms
 	}
 
 	private const float DefaultShaderLength = 512;
@@ -57,12 +60,15 @@ public class Shader : UserControl {
 		AvaloniaProperty.Register<Shader, double>(
 			nameof(ShaderHeight),
 			DefaultShaderLength);
-	
+
 	public static readonly StyledProperty<bool> IsAnimatedProperty =
 		AvaloniaProperty.Register<Shader, bool>(nameof(IsAnimated));
 
 	public static readonly StyledProperty<double> AnimationFrameRateProperty =
 		AvaloniaProperty.Register<Shader, double>(nameof(AnimationFrameRate));
+
+	public static readonly StyledProperty<Dictionary<string, object>?> UniformsProperty =
+		AvaloniaProperty.Register<Shader, Dictionary<string, object>?>(nameof(Uniforms));
 
 	public Stretch Stretch {
 		get => GetValue(StretchProperty);
@@ -90,13 +96,18 @@ public class Shader : UserControl {
 	}
 
 	public bool IsAnimated {
-		get =>  GetValue(IsAnimatedProperty);
-		set =>  SetValue(IsAnimatedProperty, value);
+		get => GetValue(IsAnimatedProperty);
+		set => SetValue(IsAnimatedProperty, value);
 	}
 
 	public double AnimationFrameRate {
-		get =>  GetValue(AnimationFrameRateProperty);
+		get => GetValue(AnimationFrameRateProperty);
 		set => SetValue(AnimationFrameRateProperty, value);
+	}
+
+	public Dictionary<string, object>? Uniforms {
+		get => GetValue(UniformsProperty);
+		set => SetValue(UniformsProperty, value);
 	}
 
 	static Shader() {
@@ -111,11 +122,12 @@ public class Shader : UserControl {
 			StretchDirectionProperty,
 			ShaderWidthProperty,
 			ShaderHeightProperty);
-		
+
 		IsAnimatedProperty.Changed.AddClassHandler<Shader>((s, e) => s.UpdateAnimation());
 		AnimationFrameRateProperty.Changed.AddClassHandler<Shader>((s, e) => s.UpdateAnimation());
+		UniformsProperty.Changed.AddClassHandler<Shader>((s, e) => s.SendUniformsUpdate());
 	}
-	
+
 	private void UpdateAnimation() {
 		_customVisual?.SendHandlerMessage(new ShaderDrawPayload(
 			HandlerCommand.UpdateAnimation,
@@ -148,7 +160,7 @@ public class Shader : UserControl {
 
 	protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e) {
 		base.OnAttachedToVisualTree(e);
-		
+
 		if (Design.IsDesignMode) // Avoid crashes in previewer
 			return;
 
@@ -207,14 +219,29 @@ public class Shader : UserControl {
 				Bounds.Size,
 				Stretch,
 				StretchDirection,
-				IsAnimated, 
-				AnimationFrameRate));
+				IsAnimated,
+				AnimationFrameRate,
+				Uniforms));
 
 		InvalidateVisual();
 	}
 
 	public void Stop() {
 		_customVisual?.SendHandlerMessage(new ShaderDrawPayload(HandlerCommand.Stop));
+	}
+
+	public void SetUniform(string name, object value) {
+		Uniforms ??= new Dictionary<string, object>();
+
+		if (Uniforms.TryGetValue(name, out var existingValue) && existingValue.Equals(value)) return;
+
+		Uniforms[name] = value;
+		SendUniformsUpdate();
+	}
+
+	private void SendUniformsUpdate() {
+		if (Uniforms == null) return;
+		_customVisual?.SendHandlerMessage(new ShaderDrawPayload(HandlerCommand.UpdateUniforms, Uniforms: Uniforms));
 	}
 
 	private void DisposeImpl() {
@@ -236,12 +263,14 @@ public class Shader : UserControl {
 		private bool _isAnimated;
 		private TimeSpan _frameInterval;
 		private TimeSpan _lastFrameTime;
+		
+		private Dictionary<string, object>? _customUniforms;
 
 		public override void OnMessage(object message) {
 			if (message is not ShaderDrawPayload msg) return;
 
 			switch (msg) {
-				case { HandlerCommand: HandlerCommand.Start, ShaderCode: { } uri, ShaderSize: { } shaderSize, Size: { } size, Stretch: { } st, StretchDirection: { } sd, IsAnimated: { } anim, FrameRate: { } rate }: {
+				case { HandlerCommand: HandlerCommand.Start, ShaderCode: { } uri, ShaderSize: { } shaderSize, Size: { } size, Stretch: { } st, StretchDirection: { } sd, IsAnimated: { } anim, FrameRate: { } rate, Uniforms: var u}: {
 					using var stream = AssetLoader.Open(uri);
 					using var txt = new StreamReader(stream);
 
@@ -255,6 +284,8 @@ public class Shader : UserControl {
 					_boundsSize = size;
 					_stretch = st;
 					_stretchDirection = sd;
+
+					_customUniforms = u;
 					
 					_isAnimated = anim;
 					_frameInterval = rate > 0 ? TimeSpan.FromSeconds(1.0 / rate) : TimeSpan.Zero;
@@ -281,6 +312,11 @@ public class Shader : UserControl {
 					if (_isAnimated) {
 						RegisterForNextAnimationFrameUpdate();
 					}
+					break;
+				}
+				case { HandlerCommand:HandlerCommand.UpdateUniforms, Uniforms: var u }: {
+					_customUniforms = u;
+					Invalidate();
 					break;
 				}
 				case { HandlerCommand: HandlerCommand.Stop }: {
@@ -321,10 +357,19 @@ public class Shader : UserControl {
 			var targetHeight = (float)(_shaderSize?.Height ?? DefaultShaderLength);
 
 			_uniforms ??= new SKRuntimeEffectUniforms(_effect);
-
+			
 			if(_isAnimated) _uniforms["iTime"] = (float)CompositionNow.TotalSeconds;
 			_uniforms["iResolution"] = new[] { targetWidth, targetHeight };
-
+			if (_customUniforms != null) {
+				foreach (var (name, value) in _customUniforms) {
+					switch (value) {
+						case float f: _uniforms[name] = f; break;
+						case int i: _uniforms[name] = i; break;
+						case float[] vf: _uniforms[name] = vf; break;
+					}
+				}
+			}
+			
 			using (var paint = new SKPaint())
 			using (var shader = _effect.ToShader(false, _uniforms)) {
 				paint.Shader = shader;
