@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:controls="using:CanvasCode.Controls"
         xmlns:paz="using:Avalonia.Controls.PanAndZoom"
-        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        mc:Ignorable="d" d:DesignWidth="1920" d:DesignHeight="1080"
         x:Class="CanvasCode.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Icon="/Assets/avalonia-logo.ico"
@@ -20,10 +20,9 @@
     <Grid>
         <controls:Shader x:Name="ShaderHost" ShaderUri="avares://CanvasCode/Assets/Shaders/CanvasBG.sksl" Stretch="Fill" IsAnimated="True" AnimationFrameRate="5"/>
         
-        
-        
         <paz:ZoomBorder x:Name="MainCanvas" PointerPressed="MainCanvas_OnPointerPressed" PointerReleased="MainCanvas_OnPointerReleased" PointerMoved="MainCanvas_OnPointerMoved" ZoomChanged="MainCanvas_OnZoomChanged" 
-                        Stretch="None" ClipToBounds="True" Focusable="True" PanButton="Left" MinZoomX="0.1" MinZoomY="0.1" MaxZoomX="10" MaxZoomY="10">
+                        Stretch="None" ClipToBounds="True" Focusable="True" PanButton="Left" MinZoomX="0.1" MinZoomY="0.1" MaxZoomX="10" MaxZoomY="10"
+                        DragDrop.AllowDrop="True">
             <Canvas>
                 <controls:CanvasWindow Canvas.Top="50" Canvas.Left="200" Background="{StaticResource PanelHighlight}" Width="200" Height="200" MinHeight="100" MinWidth="100"
                                        CornerRadius="8">
@@ -42,18 +41,36 @@
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
             <Border Grid.Column="0" Classes="panel" Margin="4 4 -2 4" HorizontalAlignment="Stretch">
-                <Grid Grid.Column="0" RowDefinitions="Auto, *">
+                <Grid RowDefinitions="Auto, Auto, *">
                     <Grid Grid.Row="0" ColumnDefinitions="Auto, *, Auto">
                         <StackPanel Grid.Column="1" Orientation="Horizontal">
-                            <Button Classes="panelButton" FontFamily="{StaticResource PhosphorRegular}" Content="&#xE236;" FontSize="20" Padding="8 6 6 6"/>
-                            <Button Classes="panelButton" FontFamily="{StaticResource PhosphorRegular}" Content="&#xE256;" FontSize="20" Padding="6"/>
+                            <Button Classes="panelButton" FontFamily="{StaticResource PhosphorRegular}" Content="&#xE256;" FontSize="20" Padding="6"
+                                    Command="{Binding SelectFolderCommand}" CommandParameter="{Binding $parent[Window]}"/>
                         </StackPanel>
                 
                         <Button Grid.Column="2" Classes="panelButton" FontFamily="{StaticResource PhosphorRegular}" Content="&#xE32A;" FontSize="20" Padding="6 6 8 6"/>
                     </Grid>
-                    <StackPanel Grid.Row="1" Orientation="Vertical">
-                        <Rectangle Classes="horizontalSeparator"/>
-                    </StackPanel>
+                    
+                    <Rectangle Grid.Row="1" Classes="horizontalSeparator"/>
+                    
+                    <ScrollViewer Grid.Row="2" VerticalAlignment="Stretch"> 
+                        <TreeView ItemsSource="{Binding OpenFolderRoot}" SelectionMode="Multiple">
+                            <TreeView.ItemTemplate>
+                                <TreeDataTemplate x:DataType="vm:FileNodeViewModel" ItemsSource="{Binding Children}">
+                                    <StackPanel Orientation="Horizontal" Spacing="4">
+                                        <Label FontFamily="{StaticResource PhosphorRegular}" Content="{Binding PhosphorIcon}" VerticalAlignment="Center" FontSize="15"/>
+                                        <TextBlock Text="{Binding Name}" VerticalAlignment="Center" FontSize="15"/>
+                                    </StackPanel>
+                                </TreeDataTemplate>
+                            </TreeView.ItemTemplate>
+                            
+                            <TreeView.Styles>
+                                <Style Selector="TreeViewItem" x:DataType="vm:FileNodeViewModel">
+                                    <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}"/>
+                                </Style>
+                            </TreeView.Styles>    
+                        </TreeView>
+                    </ScrollViewer>
                 </Grid>
             </Border>
             <GridSplitter Grid.Column="1" Background="Transparent"  ResizeDirection="Columns" Margin="0 4"/>

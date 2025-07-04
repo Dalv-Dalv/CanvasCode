@@ -15,6 +15,12 @@
     </Application.Styles>
              
     <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceInclude Source="avares://CanvasCode/Styles/SolutionExplorerStyles.axaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+        
         <FontFamily x:Key="PhosphorFill">Assets/Fonts/Phosphor-Fill.ttf#Phosphor-Fill</FontFamily>
         <FontFamily x:Key="PhosphorRegular">Assets/Fonts/Phosphor.ttf#Phosphor</FontFamily>
         
