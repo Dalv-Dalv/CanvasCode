@@ -13,6 +13,9 @@ namespace CanvasCode.Views;
 public partial class MainWindow : Window {
 	public MainWindow() {
 		InitializeComponent();
+		
+		AddHandler(DragDrop.DragOverEvent, DragOver);
+		AddHandler(DragDrop.DropEvent, Drop);
 	}
 
 	protected override void OnResized(WindowResizedEventArgs e) {
@@ -65,5 +68,29 @@ public partial class MainWindow : Window {
 
 		Canvas.SetLeft(canvasWindow, initialPos.X + (e.GetPosition(null).X - initialClickPos.X) * (1.0d / MainCanvas.ZoomX));
 		Canvas.SetTop(canvasWindow, initialPos.Y + (e.GetPosition(null).Y - initialClickPos.Y) * (1.0d / MainCanvas.ZoomY));
+	}
+
+	
+	
+	
+	private async void SolutionExplorerFile_OnPointerPressed(object? sender, PointerPressedEventArgs e) {
+		if (e.Source is not Control { DataContext: FileNodeViewModel node }) return;
+
+		var dragData = new DataObject();
+		dragData.Set("file", node);
+		
+		var result = await DragDrop.DoDragDrop(e, dragData, DragDropEffects.Move);
+		Console.WriteLine(result);
+	}
+	private void DragOver(object? sender, DragEventArgs e) {
+		Console.WriteLine("Drag over");
+	}
+	private void Drop(object? sender, DragEventArgs e) {
+		Console.WriteLine("Drop");
+
+		var data = e.Data.Get("file");
+		if (data is not FileNodeViewModel vm) return;
+
+		Console.WriteLine("Drop succesful! " + (e.Source as Control)?.Name);
 	}
 }

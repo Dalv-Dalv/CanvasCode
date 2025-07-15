@@ -1,0 +1,23 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:CanvasCode.ViewModels.CanvasWindow"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="400"
+             x:DataType="vm:CanvasWindowViewModelBase"
+             x:Class="CanvasCode.Controls.CanvasWindow">
+    
+    <Border Background="Black">
+        <Grid RowDefinitions="28, *">
+            <Border Grid.Row="0" x:Name="TitleBar"
+                    Background="{StaticResource PanelColor}"
+                    CornerRadius="8 8 0 0">
+                <Grid ColumnDefinitions="Auto, *, Auto">
+                    <!-- <ComboBox Grid.Column="0" Background="Red"/> -->
+                    <!-- <ComboBox Grid.Column="0" -->
+                    <!--           ItemsSource="{Binding Source={x:Type vm:WindowType}, Converter={StaticResource EnumToValuesConverter}}"/> -->
+                </Grid>
+            </Border>
+        </Grid>
+    </Border>
+</UserControl>

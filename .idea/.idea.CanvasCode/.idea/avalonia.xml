@@ -4,8 +4,10 @@
     <option name="projectPerEditor">
       <map>
         <entry key="CanvasCode/App.axaml" value="CanvasCode/CanvasCode.csproj" />
+        <entry key="CanvasCode/Controls/CanvasWindow.axaml" value="CanvasCode/CanvasCode.csproj" />
         <entry key="CanvasCode/Controls/ResizableWindow.axaml" value="CanvasCode/CanvasCode.csproj" />
         <entry key="CanvasCode/Controls/TemplatedControl1.axaml" value="CanvasCode/CanvasCode.csproj" />
+        <entry key="CanvasCode/Controls/wewe.axaml" value="CanvasCode/CanvasCode.csproj" />
         <entry key="CanvasCode/Styles/AppDefaultStyles.axaml" value="CanvasCode/CanvasCode.csproj" />
         <entry key="CanvasCode/Styles/SolutionExplorerStyles.axaml" value="CanvasCode/CanvasCode.csproj" />
         <entry key="CanvasCode/Views/MainWindow.axaml" value="CanvasCode/CanvasCode.csproj" />

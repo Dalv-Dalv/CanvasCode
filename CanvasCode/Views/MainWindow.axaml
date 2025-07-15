@@ -1,6 +1,7 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:CanvasCode.ViewModels"
+        xmlns:cwvm="using:CanvasCode.ViewModels.CanvasWindow"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:controls="using:CanvasCode.Controls"
@@ -14,66 +15,93 @@
     <Design.DataContext>
         <!-- This only sets the DataContext for the previewer in an IDE,
              to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
-        <vm:MainWindowViewModel/>
+        <vm:MainWindowViewModel />
     </Design.DataContext>
 
     <Grid>
-        <controls:Shader x:Name="ShaderHost" ShaderUri="avares://CanvasCode/Assets/Shaders/CanvasBG.sksl" Stretch="Fill" IsAnimated="True" AnimationFrameRate="5"/>
-        
-        <paz:ZoomBorder x:Name="MainCanvas" PointerPressed="MainCanvas_OnPointerPressed" PointerReleased="MainCanvas_OnPointerReleased" PointerMoved="MainCanvas_OnPointerMoved" ZoomChanged="MainCanvas_OnZoomChanged" 
+        <controls:Shader x:Name="ShaderHost" ShaderUri="avares://CanvasCode/Assets/Shaders/CanvasBG.sksl" Stretch="Fill" IsAnimated="True" AnimationFrameRate="5" />
+
+        <paz:ZoomBorder x:Name="MainCanvas" PointerPressed="MainCanvas_OnPointerPressed" PointerReleased="MainCanvas_OnPointerReleased" PointerMoved="MainCanvas_OnPointerMoved" ZoomChanged="MainCanvas_OnZoomChanged"
                         Stretch="None" ClipToBounds="True" Focusable="True" PanButton="Left" MinZoomX="0.1" MinZoomY="0.1" MaxZoomX="10" MaxZoomY="10"
                         DragDrop.AllowDrop="True">
-            <Canvas>
-                <controls:CanvasWindow Canvas.Top="50" Canvas.Left="200" Background="{StaticResource PanelHighlight}" Width="200" Height="200" MinHeight="100" MinWidth="100"
-                                       CornerRadius="8">
-                    <Border Margin="2 20 2 2" Background="{StaticResource PanelColor}"
-                            CornerRadius="3 3 6.5 6.5"></Border>
-                </controls:CanvasWindow>
-            </Canvas>
+            <ItemsControl ItemsSource="{Binding CanvasWindows}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <Canvas />
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+
+                <ItemsControl.ItemContainerTheme>
+                    <!-- Here we bind the position and size of the container to our ViewModel properties -->
+                    <ControlTheme TargetType="ContentPresenter" x:DataType="cwvm:CanvasWindowViewModelBase">
+                        <Setter Property="Canvas.Left" Value="{Binding PosX}"/>
+                        <Setter Property="Canvas.Top" Value="{Binding PosY}"/>
+                    </ControlTheme>
+                </ItemsControl.ItemContainerTheme>
+
+                <!-- DataTemplates will automatically pick the right UI for each ViewModel type -->
+                <!-- The UI for a File Window -->
+                <ItemsControl.DataTemplates>
+                    <DataTemplate DataType="{x:Type cwvm:FileCanvasWindowViewModel}">
+                        <controls:CanvasWindow>
+                            <Grid>
+                                <TextBlock Text="I am a Text Editor!" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Grid>
+                        </controls:CanvasWindow>
+                    </DataTemplate>
+
+                    <!-- The UI for a Folder Window -->
+                    <DataTemplate DataType="{x:Type cwvm:FolderCanvasWindowViewModel}">
+                        <controls:CanvasWindow>
+                            <!-- Here you'd put another TreeView, bound to this VM's 'Nodes' -->
+                            <TextBlock Text="I am a Folder View!" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </controls:CanvasWindow>
+                    </DataTemplate>
+                </ItemsControl.DataTemplates>
+            </ItemsControl>
         </paz:ZoomBorder>
-        
-        
-        
+
+
         <Grid>
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="0.25*" MinWidth="100" MaxWidth="600"/>
-                <ColumnDefinition Width="6"/>
-                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="0.25*" MinWidth="100" MaxWidth="600" />
+                <ColumnDefinition Width="6" />
+                <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
             <Border Grid.Column="0" Classes="panel" Margin="4 4 -2 4" HorizontalAlignment="Stretch">
                 <Grid RowDefinitions="Auto, Auto, *">
                     <Grid Grid.Row="0" ColumnDefinitions="Auto, *, Auto">
                         <StackPanel Grid.Column="1" Orientation="Horizontal">
                             <Button Classes="panelButton" FontFamily="{StaticResource PhosphorRegular}" Content="&#xE256;" FontSize="20" Padding="6"
-                                    Command="{Binding SelectFolderCommand}" CommandParameter="{Binding $parent[Window]}"/>
+                                    Command="{Binding SelectFolderCommand}" CommandParameter="{Binding $parent[Window]}" />
                         </StackPanel>
-                
-                        <Button Grid.Column="2" Classes="panelButton" FontFamily="{StaticResource PhosphorRegular}" Content="&#xE32A;" FontSize="20" Padding="6 6 8 6"/>
+
+                        <Button Grid.Column="2" Classes="panelButton" FontFamily="{StaticResource PhosphorRegular}" Content="&#xE32A;" FontSize="20" Padding="6 6 8 6" />
                     </Grid>
-                    
-                    <Rectangle Grid.Row="1" Classes="horizontalSeparator"/>
-                    
-                    <ScrollViewer Grid.Row="2" VerticalAlignment="Stretch"> 
+
+                    <Rectangle Grid.Row="1" Classes="horizontalSeparator" />
+
+                    <ScrollViewer Grid.Row="2" VerticalAlignment="Stretch">
                         <TreeView ItemsSource="{Binding OpenFolderRoot}" SelectionMode="Multiple">
                             <TreeView.ItemTemplate>
                                 <TreeDataTemplate x:DataType="vm:FileNodeViewModel" ItemsSource="{Binding Children}">
-                                    <StackPanel Orientation="Horizontal" Spacing="4">
-                                        <Label FontFamily="{StaticResource PhosphorRegular}" Content="{Binding PhosphorIcon}" VerticalAlignment="Center" FontSize="15"/>
-                                        <TextBlock Text="{Binding Name}" VerticalAlignment="Center" FontSize="15"/>
+                                    <StackPanel Orientation="Horizontal" Spacing="4" PointerPressed="SolutionExplorerFile_OnPointerPressed">
+                                        <Label FontFamily="{StaticResource PhosphorRegular}" Content="{Binding PhosphorIcon}" VerticalAlignment="Center" FontSize="15" />
+                                        <TextBlock Text="{Binding Name}" VerticalAlignment="Center" FontSize="15" />
                                     </StackPanel>
                                 </TreeDataTemplate>
                             </TreeView.ItemTemplate>
-                            
+
                             <TreeView.Styles>
                                 <Style Selector="TreeViewItem" x:DataType="vm:FileNodeViewModel">
-                                    <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}"/>
+                                    <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}" />
                                 </Style>
-                            </TreeView.Styles>    
+                            </TreeView.Styles>
                         </TreeView>
                     </ScrollViewer>
                 </Grid>
             </Border>
-            <GridSplitter Grid.Column="1" Background="Transparent"  ResizeDirection="Columns" Margin="0 4"/>
+            <GridSplitter Grid.Column="1" Background="Transparent" ResizeDirection="Columns" Margin="0 4" />
         </Grid>
     </Grid>
 </Window>

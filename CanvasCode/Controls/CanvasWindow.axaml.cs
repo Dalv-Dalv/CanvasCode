@@ -12,7 +12,7 @@ public enum ResizeBehaviour {
 	All, Horizontal, Vertical, None
 }
 
-public partial class CanvasWindow : Border {
+public partial class CanvasWindow : ContentControl {
 	private enum ResizeDirection { None, Left, TopLeft, Top, TopRight, Right, BottomRight, Bottom, BottomLeft }
 
 	private bool isResizing;
@@ -27,7 +27,9 @@ public partial class CanvasWindow : Border {
 	public double HandlesSize { get => GetValue(HandlesSizeProperty); set => SetValue(HandlesSizeProperty, value); }
 	public static readonly StyledProperty<double> HandlesSizeProperty = AvaloniaProperty.Register<CanvasWindow, double>(nameof(HandlesSize), defaultValue:4);
 
-
+	public CanvasWindow() {
+		InitializeComponent();
+	}
 	
 	protected override void OnPointerPressed(PointerPressedEventArgs e) {
 		if (!e.Properties.IsLeftButtonPressed) return;
