@@ -1,7 +1,9 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:CanvasCode.ViewModels"
-        xmlns:cwvm="using:CanvasCode.ViewModels.CanvasWindow"
+        xmlns:v="clr-namespace:CanvasCode.Views"
+        xmlns:cwv="clr-namespace:CanvasCode.Views.CanvasWindows"
+        xmlns:cwvm="clr-namespace:CanvasCode.ViewModels.CanvasWindows"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:controls="using:CanvasCode.Controls"
@@ -22,43 +24,31 @@
         <controls:Shader x:Name="ShaderHost" ShaderUri="avares://CanvasCode/Assets/Shaders/CanvasBG.sksl" Stretch="Fill" IsAnimated="True" AnimationFrameRate="5" />
 
         <paz:ZoomBorder x:Name="MainCanvas" PointerPressed="MainCanvas_OnPointerPressed" PointerReleased="MainCanvas_OnPointerReleased" PointerMoved="MainCanvas_OnPointerMoved" ZoomChanged="MainCanvas_OnZoomChanged"
-                        Stretch="None" ClipToBounds="True" Focusable="True" PanButton="Left" MinZoomX="0.1" MinZoomY="0.1" MaxZoomX="10" MaxZoomY="10"
+                        Stretch="None" ClipToBounds="True" Focusable="True" PanButton="Left" MinZoomX="0.1" MinZoomY="0.1" MaxZoomX="10" MaxZoomY="10" 
                         DragDrop.AllowDrop="True">
-            <ItemsControl ItemsSource="{Binding CanvasWindows}">
+            
+            <ItemsControl ItemsSource="{Binding Windows}" ClipToBounds="False">
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
-                        <Canvas />
+                        <Canvas/>
                     </ItemsPanelTemplate>
                 </ItemsControl.ItemsPanel>
-
+            
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <cwv:CanvasWindowView Width="{Binding Size.Width}" MinWidth="300" MinHeight="300"
+                                              Height="{Binding Size.Height}"/>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+                
                 <ItemsControl.ItemContainerTheme>
-                    <!-- Here we bind the position and size of the container to our ViewModel properties -->
-                    <ControlTheme TargetType="ContentPresenter" x:DataType="cwvm:CanvasWindowViewModelBase">
-                        <Setter Property="Canvas.Left" Value="{Binding PosX}"/>
-                        <Setter Property="Canvas.Top" Value="{Binding PosY}"/>
+                    <ControlTheme TargetType="ContentPresenter" x:DataType="cwvm:CanvasWindowViewModel">
+                        <Setter Property="Canvas.Left" Value="{Binding Position.X}"/>
+                        <Setter Property="Canvas.Top" Value="{Binding Position.Y}"/>
                     </ControlTheme>
                 </ItemsControl.ItemContainerTheme>
-
-                <!-- DataTemplates will automatically pick the right UI for each ViewModel type -->
-                <!-- The UI for a File Window -->
-                <ItemsControl.DataTemplates>
-                    <DataTemplate DataType="{x:Type cwvm:FileCanvasWindowViewModel}">
-                        <controls:CanvasWindow>
-                            <Grid>
-                                <TextBlock Text="I am a Text Editor!" HorizontalAlignment="Center" VerticalAlignment="Center" />
-                            </Grid>
-                        </controls:CanvasWindow>
-                    </DataTemplate>
-
-                    <!-- The UI for a Folder Window -->
-                    <DataTemplate DataType="{x:Type cwvm:FolderCanvasWindowViewModel}">
-                        <controls:CanvasWindow>
-                            <!-- Here you'd put another TreeView, bound to this VM's 'Nodes' -->
-                            <TextBlock Text="I am a Folder View!" HorizontalAlignment="Center" VerticalAlignment="Center" />
-                        </controls:CanvasWindow>
-                    </DataTemplate>
-                </ItemsControl.DataTemplates>
             </ItemsControl>
+            
         </paz:ZoomBorder>
 
 

@@ -1,0 +1,70 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:CanvasCode.ViewModels.CanvasWindows"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="CanvasCode.Views.CanvasWindows.CanvasWindowView"
+             x:DataType="vm:CanvasWindowViewModel">
+    
+    <Design.DataContext>
+        <vm:CanvasWindowViewModel/>
+    </Design.DataContext>
+    
+    <Grid ColumnDefinitions="8, *, 8" RowDefinitions="8, *, 8">
+        <!--Actual window-->
+        <Grid Grid.Row="1" Grid.Column="1" Margin="-4" RowDefinitions="Auto, Auto, *" PointerPressed="Window_OnPointerPressed">
+            <Border Grid.Row="0"
+                    Height="32"
+                    Classes="panel"
+                    BorderThickness="1 1 1 0"
+                    CornerRadius="10 10 0 0">
+                <Grid ColumnDefinitions="Auto, *, Auto">
+                    <ComboBox Grid.Column="0"
+                              CornerRadius="10 5 5 5"
+                              ItemsSource="{Binding AvailableTypes}"
+                              SelectedItem="{Binding SelectedType, Mode=TwoWay}"/>
+                    <Thumb Grid.Column="1" x:Name="D" DragDelta="Thumb_OnDrag" DragStarted="Thumb_OnDragStarted" DragCompleted="Thumb_OnDragCompleted" Background="Transparent" Theme="{StaticResource ThumbTheme}"/>
+                    <TextBlock Grid.Column="1" Text="{Binding Title}" VerticalAlignment="Center" Margin="10 0 0 0" IsHitTestVisible="False"/>
+                
+                    <Button Grid.Column="2" Classes="panelButton">
+                        <Label Content="&#xE4F8;" FontFamily="{StaticResource PhosphorFill}" FontSize="20"/>
+                    </Button>
+                </Grid>
+            </Border>
+            <Rectangle Grid.Row="1" Height="1" Fill="{StaticResource PanelHighlight}"></Rectangle>
+            <Border Grid.Row="2" 
+                    Background="{StaticResource PrimaryBackground}"
+                    BorderBrush="{StaticResource PanelHighlight}"
+                    BorderThickness="1 0 1 1"
+                    CornerRadius="0 0 10 10">
+                <ContentControl Content="{Binding CurrentContent}"/>
+            </Border>
+        </Grid>
+        
+        <!-- Corner resize handles -->
+        <Thumb x:Name="TL" DragDelta="Thumb_OnDrag" DragStarted="Thumb_OnDragStarted" DragCompleted="Thumb_OnDragCompleted" Cursor="TopLeftCorner"     Background="Transparent" Theme="{StaticResource ThumbTheme}" Grid.Row="0" Grid.Column="0"/>
+        <Thumb x:Name="TR" DragDelta="Thumb_OnDrag" DragStarted="Thumb_OnDragStarted" DragCompleted="Thumb_OnDragCompleted" Cursor="TopRightCorner"    Background="Transparent" Theme="{StaticResource ThumbTheme}" Grid.Row="0" Grid.Column="2"/>
+        <Thumb x:Name="BR" DragDelta="Thumb_OnDrag" DragStarted="Thumb_OnDragStarted" DragCompleted="Thumb_OnDragCompleted" Cursor="BottomRightCorner" Background="Transparent" Theme="{StaticResource ThumbTheme}" Grid.Row="2" Grid.Column="2"/>
+        <Thumb x:Name="BL" DragDelta="Thumb_OnDrag" DragStarted="Thumb_OnDragStarted" DragCompleted="Thumb_OnDragCompleted" Cursor="BottomLeftCorner"  Background="Transparent" Theme="{StaticResource ThumbTheme}" Grid.Row="2" Grid.Column="0"/>
+        
+        <!-- Edge resize handles -->
+        <Thumb x:Name="L" DragDelta="Thumb_OnDrag" DragStarted="Thumb_OnDragStarted" DragCompleted="Thumb_OnDragCompleted" Cursor="SizeWestEast"   Background="Transparent" Theme="{StaticResource ThumbTheme}" Grid.Row="1" Grid.Column="0"/>
+        <Thumb x:Name="T" DragDelta="Thumb_OnDrag" DragStarted="Thumb_OnDragStarted" DragCompleted="Thumb_OnDragCompleted" Cursor="SizeNorthSouth" Background="Transparent" Theme="{StaticResource ThumbTheme}" Grid.Row="0" Grid.Column="1"/>
+        <Thumb x:Name="R" DragDelta="Thumb_OnDrag" DragStarted="Thumb_OnDragStarted" DragCompleted="Thumb_OnDragCompleted" Cursor="SizeWestEast"   Background="Transparent" Theme="{StaticResource ThumbTheme}" Grid.Row="1" Grid.Column="2"/>
+        <Thumb x:Name="B" DragDelta="Thumb_OnDrag" DragStarted="Thumb_OnDragStarted" DragCompleted="Thumb_OnDragCompleted" Cursor="SizeNorthSouth" Background="Transparent" Theme="{StaticResource ThumbTheme}" Grid.Row="2" Grid.Column="1"/>
+    </Grid>
+    
+    <UserControl.Resources>
+        <ControlTheme x:Key="ThumbTheme" TargetType="Thumb">
+            <Setter Property="Template">
+                <ControlTemplate>
+                    <Border Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            Cursor="{TemplateBinding Cursor}"/>
+                </ControlTemplate>
+            </Setter>
+        </ControlTheme>
+    </UserControl.Resources>
+</UserControl>

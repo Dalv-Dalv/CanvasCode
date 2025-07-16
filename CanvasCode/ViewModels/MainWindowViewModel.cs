@@ -3,9 +3,10 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.IO;
 using System.Threading.Tasks;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Platform.Storage;
-using CanvasCode.ViewModels.CanvasWindow;
+using CanvasCode.ViewModels.CanvasWindows;
 using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace CanvasCode.ViewModels;
@@ -15,14 +16,21 @@ public partial class MainWindowViewModel : ViewModelBase {
 	[ObservableProperty] private string? currentFolder = null;
 	
 	public ObservableCollection<FileNodeViewModel> OpenFolderRoot { get; } = [];
-	public ObservableCollection<CanvasWindowViewModelBase> CanvasWindows { get; } = [];
-
 	public readonly Action<string> OnFolderChanged;
+
+	public ObservableCollection<CanvasWindowViewModel> Windows { get; } = [];
 	
 	public MainWindowViewModel() {
 		OnFolderChanged += PopulateTree;
 		
-		CanvasWindows.Add(new FileCanvasWindowViewModel(new FileNodeViewModel(@"C:\Dalv\School\University\Classes\Semestrul2\POO\OOP_Project\GameLogic\Map\Terrain.cpp")));
+		OpenNewWindow();
+	}
+
+	public void OpenNewWindow() {
+		Windows.Add(new CanvasWindowViewModel {
+			Position = new Point(100, 100),
+			Size = new Size(300, 300),
+		});
 	}
 	
 	public async void SelectFolderCommand(Window window) {

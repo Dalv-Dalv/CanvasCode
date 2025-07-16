@@ -10,6 +10,10 @@
         <entry key="CanvasCode/Controls/wewe.axaml" value="CanvasCode/CanvasCode.csproj" />
         <entry key="CanvasCode/Styles/AppDefaultStyles.axaml" value="CanvasCode/CanvasCode.csproj" />
         <entry key="CanvasCode/Styles/SolutionExplorerStyles.axaml" value="CanvasCode/CanvasCode.csproj" />
+        <entry key="CanvasCode/Views/CanvasWindows/CanvasCodeEditorView.axaml" value="CanvasCode/CanvasCode.csproj" />
+        <entry key="CanvasCode/Views/CanvasWindows/CanvasFolderTreeView.axaml" value="CanvasCode/CanvasCode.csproj" />
+        <entry key="CanvasCode/Views/CanvasWindows/CanvasShaderPreviewView.axaml" value="CanvasCode/CanvasCode.csproj" />
+        <entry key="CanvasCode/Views/CanvasWindows/CanvasWindowView.axaml" value="CanvasCode/CanvasCode.csproj" />
         <entry key="CanvasCode/Views/MainWindow.axaml" value="CanvasCode/CanvasCode.csproj" />
         <entry key="CanvasCode/Views/Window1.axaml" value="CanvasCode/CanvasCode.csproj" />
       </map>
