@@ -27,7 +27,7 @@
                         Stretch="None" ClipToBounds="True" Focusable="True" PanButton="Left" MinZoomX="0.1" MinZoomY="0.1" MaxZoomX="10" MaxZoomY="10" 
                         DragDrop.AllowDrop="True">
             
-            <ItemsControl ItemsSource="{Binding Windows}" ClipToBounds="False">
+            <ItemsControl x:Name="WindowsItemsControl" ItemsSource="{Binding Windows}" ClipToBounds="False">
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
                         <Canvas/>

@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using System.IO;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.PanAndZoom;
@@ -7,6 +8,8 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
 using CanvasCode.ViewModels;
+using CanvasCode.ViewModels.CanvasWindows;
+using Microsoft.VisualBasic;
 
 namespace CanvasCode.Views;
 
@@ -90,7 +93,13 @@ public partial class MainWindow : Window {
 
 		var data = e.Data.Get("file");
 		if (data is not FileNodeViewModel vm) return;
+		if (DataContext is not MainWindowViewModel mainvm) return;
 
-		Console.WriteLine("Drop succesful! " + (e.Source as Control)?.Name);
+		var attr = File.GetAttributes(vm.FilePath);
+		var type = attr.HasFlag(FileAttributes.Directory) ? CanvasWindowType.FolderTree : CanvasWindowType.CodeEditor;
+		
+		mainvm.OpenNewWindow(e.GetPosition(WindowsItemsControl) - new Point(150, 150), type);
+		
+		Console.WriteLine($"Drop succesful! {vm.FilePath}");
 	}
 }

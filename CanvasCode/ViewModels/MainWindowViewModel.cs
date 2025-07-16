@@ -23,13 +23,14 @@ public partial class MainWindowViewModel : ViewModelBase {
 	public MainWindowViewModel() {
 		OnFolderChanged += PopulateTree;
 		
-		OpenNewWindow();
+		OpenNewWindow(new Point(500, 500));
 	}
 
-	public void OpenNewWindow() {
+	public void OpenNewWindow(Point pos, CanvasWindowType type = CanvasWindowType.CodeEditor) {
 		Windows.Add(new CanvasWindowViewModel {
-			Position = new Point(100, 100),
+			Position = pos,
 			Size = new Size(300, 300),
+			SelectedType = type
 		});
 	}
 	
