@@ -76,7 +76,7 @@
                             <TreeView.ItemTemplate>
                                 <TreeDataTemplate x:DataType="vm:FileNodeViewModel" ItemsSource="{Binding Children}">
                                     <StackPanel Orientation="Horizontal" Spacing="4" PointerPressed="SolutionExplorerFile_OnPointerPressed">
-                                        <Label FontFamily="{StaticResource PhosphorRegular}" Content="{Binding PhosphorIcon}" VerticalAlignment="Center" FontSize="15" />
+                                        <Label FontFamily="{StaticResource PhosphorRegular}" Foreground="{Binding IconColor}" Content="{Binding PhosphorIcon}" VerticalAlignment="Center" FontSize="15" />
                                         <TextBlock Text="{Binding Name}" VerticalAlignment="Center" FontSize="15" />
                                     </StackPanel>
                                 </TreeDataTemplate>
@@ -84,7 +84,8 @@
 
                             <TreeView.Styles>
                                 <Style Selector="TreeViewItem" x:DataType="vm:FileNodeViewModel">
-                                    <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}" />
+                                    <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}"/>
+                                    <Setter Property="IsEnabled" Value="{Binding IsInteractable}"/>
                                 </Style>
                             </TreeView.Styles>
                         </TreeView>

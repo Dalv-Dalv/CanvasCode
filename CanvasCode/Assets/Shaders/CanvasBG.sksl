@@ -21,10 +21,10 @@ float4 main(float2 fragCoord) {
 	float dist = length(uv) - 0.03;
 	
 	float3 col = 0.5 + 0.5*cos(iTime * 0.25 +float3(screenUV,0)+float3(0,2,4));
-	col = mix(col, float3(0.122, 0.125, 0.137), 0.7);
+	col = mix(col, float3(0.122, 0.125, 0.137) * 0.8, 0.7);
 	
 	if(dist > 0){
-		col = float3(0.122, 0.125, 0.137);
+		col = float3(0.122, 0.125, 0.137) * 0.8;
 	}
 	
     return float4(col, 1.0);

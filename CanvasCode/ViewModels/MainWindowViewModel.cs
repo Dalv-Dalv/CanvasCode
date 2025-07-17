@@ -55,6 +55,8 @@ public partial class MainWindowViewModel : ViewModelBase {
 			OpenFolderRoot.Clear();
 		}
 		
+		//TODO: Use FileSystemWatcher to watch for changes in the tree and update the UI
+		
 		OpenFolderRoot.Add(new FileNodeViewModel(folderPath));
 		OpenFolderRoot[0].IsExpanded = true;
 	}
