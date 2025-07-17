@@ -95,11 +95,11 @@ public partial class MainWindow : Window {
 		if (data is not FileNodeViewModel vm) return;
 		if (DataContext is not MainWindowViewModel mainvm) return;
 
-		var attr = File.GetAttributes(vm.FilePath);
+		var attr = File.GetAttributes(vm.Model.FullPath);
 		var type = attr.HasFlag(FileAttributes.Directory) ? CanvasWindowType.FolderTree : CanvasWindowType.CodeEditor;
 		
 		mainvm.OpenNewWindow(e.GetPosition(WindowsItemsControl) - new Point(150, 150), type);
 		
-		Console.WriteLine($"Drop succesful! {vm.FilePath}");
+		Console.WriteLine($"Drop succesful! {vm.Model.FullPath}");
 	}
 }

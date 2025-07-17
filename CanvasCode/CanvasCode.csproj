@@ -9,7 +9,6 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <Folder Include="Models\"/>
         <AvaloniaResource Include="Assets\**"/>
     </ItemGroup>
 
@@ -27,5 +26,6 @@
         <PackageReference Include="AvaloniaEdit.TextMate" Version="11.3.0" />
         <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.1"/>
         <PackageReference Include="PanAndZoom" Version="11.3.0.1" />
+        <PackageReference Include="Xaml.Behaviors.Interactivity" Version="11.3.2" />
     </ItemGroup>
 </Project>

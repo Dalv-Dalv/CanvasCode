@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Platform.Storage;
+using CanvasCode.Models;
 using CanvasCode.ViewModels.CanvasWindows;
 using CommunityToolkit.Mvvm.ComponentModel;
 
@@ -15,7 +16,7 @@ public partial class MainWindowViewModel : ViewModelBase {
 	
 	[ObservableProperty] private string? currentFolder = null;
 	
-	public ObservableCollection<FileNodeViewModel> OpenFolderRoot { get; } = [];
+	public ObservableCollection<FileNodeViewModel> OpenFolderRoots { get; } = [];
 	public readonly Action<string> OnFolderChanged;
 
 	public ObservableCollection<CanvasWindowViewModel> Windows { get; } = [];
@@ -50,14 +51,16 @@ public partial class MainWindowViewModel : ViewModelBase {
 
 	private void PopulateTree(string folderPath) {
 		if (!Directory.Exists(folderPath)) return;
-		if (OpenFolderRoot.Count > 0) {
-			if (OpenFolderRoot[0].ToString() == Path.GetDirectoryName(folderPath)) return;
-			OpenFolderRoot.Clear();
+		
+		//TODO: Load multiple folders
+		if (OpenFolderRoots.Count > 0) {
+			if (OpenFolderRoots[0].ToString() == Path.GetDirectoryName(folderPath)) return;
+			OpenFolderRoots.Clear();
 		}
 		
 		//TODO: Use FileSystemWatcher to watch for changes in the tree and update the UI
 		
-		OpenFolderRoot.Add(new FileNodeViewModel(folderPath));
-		OpenFolderRoot[0].IsExpanded = true;
+		OpenFolderRoots.Add(new FileNodeViewModel(new FolderModel(folderPath)));
+		OpenFolderRoots[0].IsExpanded = true;
 	}
 }

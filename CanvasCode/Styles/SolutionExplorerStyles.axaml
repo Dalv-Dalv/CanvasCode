@@ -1,5 +1,7 @@
 ﻿<ResourceDictionary xmlns="https://github.com/avaloniaui"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:i="clr-namespace:Avalonia.Xaml.Interactivity;assembly=Xaml.Behaviors.Interactivity"
+                    xmlns:behaviours="clr-namespace:CanvasCode.Behaviours"                    
                     xmlns:converters="using:CanvasCode.Converters">
 
     <Design.PreviewWith>
@@ -21,27 +23,29 @@
 
     <converters:TreeViewItemMarginConverter x:Key="TreeViewItemLeftMarginConverter" />
     <x:Double x:Key="TreeViewItemIndent">10</x:Double>
-    <x:Double x:Key="TreeViewItemExpandCollapseChevronSize">12</x:Double>
-    <Thickness x:Key="TreeViewItemExpandCollapseChevronMargin">2, 0, 4, 0</Thickness>
+    <x:Double x:Key="TreeViewItemExpandCollapseChevronWidth">14</x:Double>
+    <x:Double x:Key="TreeViewItemExpandCollapseChevronContainerWidth">20</x:Double>
+    <Thickness x:Key="TreeViewItemExpandCollapseChevronMargin">0, 0, 0, 0</Thickness>
     <StreamGeometry x:Key="TreeViewItemCollapsedChevronPathData">M 1,0 10,10 l -9,10 -1,-1 L 8,10 -0,1 Z</StreamGeometry>
     <StreamGeometry x:Key="TreeViewItemExpandedChevronPathData">M0,1 L10,10 20,1 19,0 10,8 1,0 Z</StreamGeometry>
 
     <ControlTheme x:Key="FluentTreeViewExpandCollapseChevron" TargetType="ToggleButton">
-        <Setter Property="Margin" Value="0" />
-        <Setter Property="Width" Value="{StaticResource TreeViewItemExpandCollapseChevronSize}" />
-        <Setter Property="Height" Value="{StaticResource TreeViewItemExpandCollapseChevronSize}" />
+        <Setter Property="Margin" Value="0"/>
+        <!-- <Setter Property="Width" Value="{StaticResource TreeViewItemExpandCollapseChevronWidth}" /> -->
         <Setter Property="Template">
             <ControlTemplate>
-                <Border Background="Transparent"
-                        Padding="2"
+                <Border Background="Transparent" Width="{StaticResource TreeViewItemExpandCollapseChevronContainerWidth}"
                         HorizontalAlignment="Stretch"
                         VerticalAlignment="Stretch">
-                    <Path x:Name="ChevronPath"
-                          Data="{StaticResource TreeViewItemCollapsedChevronPathData}"
-                          Fill="{DynamicResource TreeViewItemForeground}"
-                          Stretch="Uniform" 
-                          HorizontalAlignment="Center"
-                          VerticalAlignment="Center"/>
+                    <Border Padding="3.5" Width="{StaticResource TreeViewItemExpandCollapseChevronWidth}" 
+                            Height="{StaticResource TreeViewItemExpandCollapseChevronWidth}" VerticalAlignment="Stretch" HorizontalAlignment="Right">
+                        <Path x:Name="ChevronPath"
+                              Data="{StaticResource TreeViewItemCollapsedChevronPathData}"
+                              Fill="{DynamicResource TreeViewItemForeground}"
+                              Stretch="Uniform" 
+                              HorizontalAlignment="Center"
+                              VerticalAlignment="Center"/>
+                    </Border>
                 </Border>
             </ControlTemplate>
         </Setter>
@@ -62,6 +66,10 @@
         <Setter Property="Template">
             <ControlTemplate>
                 <StackPanel Orientation="Vertical">
+                    <i:Interaction.Behaviors>
+                        <behaviours:SuppressBringIntoViewBehaviour/>
+                    </i:Interaction.Behaviors>
+                    
                     <Border Name="PART_LayoutRoot"
                             Classes="TreeViewItemLayoutRoot"
                             Focusable="True"
@@ -69,7 +77,8 @@
                             BorderBrush="{StaticResource PrimarySeparator}"
                             BorderThickness="0"
                             CornerRadius="4"
-                            TemplatedControl.IsTemplateFocusTarget="True"> 
+                            TemplatedControl.IsTemplateFocusTarget="True">
+                        
                         <Border.Margin>
                             <MultiBinding Converter="{x:Static converters:TreeViewItemMarginConverter.Instance}">
                                 <Binding Path="Level" RelativeSource="{RelativeSource TemplatedParent}" />
@@ -89,7 +98,7 @@
                             </Panel>
                             <ContentPresenter Name="PART_HeaderPresenter"
                                               Grid.Column="1"
-                                              Focusable="False"
+                                              Focusable="False" Foreground="{StaticResource PrimaryText}"
                                               Content="{TemplateBinding Header}"
                                               ContentTemplate="{TemplateBinding HeaderTemplate}"
                                               HorizontalAlignment="{TemplateBinding HorizontalAlignment}"
@@ -171,7 +180,7 @@
             <Setter Property="IsVisible" Value="False" />
         </Style>
         <Style Selector="^:empty /template/ Panel#PART_ExpandCollapseChevronContainer">
-            <Setter Property="Width" Value="{StaticResource TreeViewItemExpandCollapseChevronSize}" />
+            <Setter Property="MinWidth" Value="{StaticResource TreeViewItemExpandCollapseChevronContainerWidth}" />
         </Style>
     </ControlTheme>
 </ResourceDictionary>

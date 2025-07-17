@@ -1,9 +1,11 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:m="using:CanvasCode.Models"
         xmlns:vm="using:CanvasCode.ViewModels"
         xmlns:v="clr-namespace:CanvasCode.Views"
         xmlns:cwv="clr-namespace:CanvasCode.Views.CanvasWindows"
         xmlns:cwvm="clr-namespace:CanvasCode.ViewModels.CanvasWindows"
+        xmlns:converters="clr-namespace:CanvasCode.Converters"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:controls="using:CanvasCode.Controls"
@@ -14,6 +16,11 @@
         Icon="/Assets/avalonia-logo.ico"
         Title="CanvasCode">
 
+    <Window.Resources>
+        <converters:FileModelToIconConverter x:Key="FileToIconConverter"/>
+        <converters:FileModelToColorConverter x:Key="FileToColorConverter"/>
+    </Window.Resources>
+    
     <Design.DataContext>
         <!-- This only sets the DataContext for the previewer in an IDE,
              to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
@@ -71,25 +78,27 @@
 
                     <Rectangle Grid.Row="1" Classes="horizontalSeparator" />
 
-                    <ScrollViewer Grid.Row="2" VerticalAlignment="Stretch">
-                        <TreeView ItemsSource="{Binding OpenFolderRoot}" SelectionMode="Multiple">
-                            <TreeView.ItemTemplate>
-                                <TreeDataTemplate x:DataType="vm:FileNodeViewModel" ItemsSource="{Binding Children}">
-                                    <StackPanel Orientation="Horizontal" Spacing="4" PointerPressed="SolutionExplorerFile_OnPointerPressed">
-                                        <Label FontFamily="{StaticResource PhosphorRegular}" Foreground="{Binding IconColor}" Content="{Binding PhosphorIcon}" VerticalAlignment="Center" FontSize="15" />
-                                        <TextBlock Text="{Binding Name}" VerticalAlignment="Center" FontSize="15" />
-                                    </StackPanel>
-                                </TreeDataTemplate>
-                            </TreeView.ItemTemplate>
+                    <TreeView Grid.Row="2" VerticalAlignment="Stretch" ItemsSource="{Binding OpenFolderRoots}" SelectionMode="Multiple">
+                        <TreeView.ItemTemplate>
+                            <TreeDataTemplate x:DataType="vm:FileNodeViewModel" ItemsSource="{Binding Children}">
+                                <StackPanel Orientation="Horizontal" Spacing="4" PointerPressed="SolutionExplorerFile_OnPointerPressed">
+                                    <Label FontFamily="{StaticResource PhosphorRegular}" 
+                                           Foreground="{Binding Model, Converter={StaticResource FileToColorConverter}}" 
+                                           Content="{Binding Model, Converter={StaticResource FileToIconConverter}}" 
+                                           VerticalAlignment="Center" FontSize="15" />
+                                    <TextBlock Text="{Binding Model.Name}" 
+                                               VerticalAlignment="Center" FontSize="15" />
+                                </StackPanel>
+                            </TreeDataTemplate>
+                        </TreeView.ItemTemplate>
 
-                            <TreeView.Styles>
-                                <Style Selector="TreeViewItem" x:DataType="vm:FileNodeViewModel">
-                                    <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}"/>
-                                    <Setter Property="IsEnabled" Value="{Binding IsInteractable}"/>
-                                </Style>
-                            </TreeView.Styles>
-                        </TreeView>
-                    </ScrollViewer>
+                        <TreeView.Styles>
+                            <Style Selector="TreeViewItem" x:DataType="vm:FileNodeViewModel">
+                                <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}"/>
+                                <Setter Property="IsEnabled" Value="{Binding IsInteractable}"/>
+                            </Style>
+                        </TreeView.Styles>
+                    </TreeView>
                 </Grid>
             </Border>
             <GridSplitter Grid.Column="1" Background="Transparent" ResizeDirection="Columns" Margin="0 4" />
