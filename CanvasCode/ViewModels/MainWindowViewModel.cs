@@ -60,7 +60,7 @@ public partial class MainWindowViewModel : ViewModelBase {
 		
 		//TODO: Use FileSystemWatcher to watch for changes in the tree and update the UI
 		
-		OpenFolderRoots.Add(new FileNodeViewModel(new FolderModel(folderPath)));
+		OpenFolderRoots.Add(new FileNodeViewModel(new FolderModel(folderPath), App.FolderService, App.Messenger));
 		OpenFolderRoots[0].IsExpanded = true;
 	}
 }

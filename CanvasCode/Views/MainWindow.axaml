@@ -95,7 +95,7 @@
                         <TreeView.Styles>
                             <Style Selector="TreeViewItem" x:DataType="vm:FileNodeViewModel">
                                 <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}"/>
-                                <Setter Property="IsEnabled" Value="{Binding IsInteractable}"/>
+                                <Setter Property="IsEnabled" Value="{Binding Model.IsAccessible}"/>
                             </Style>
                         </TreeView.Styles>
                     </TreeView>
