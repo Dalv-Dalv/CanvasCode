@@ -13,12 +13,13 @@ public class FolderDataService(IMessenger messenger) : ICacheManager {
 	private readonly ConcurrentDictionary<string, DateTime> lastAccessTimes = new();
 	
 	private readonly ConcurrentDictionary<string, FileSystemWatcher> activeWatchers = new();
+	private readonly ConcurrentDictionary<string, HashSet<object>> referenceOwners = new();
 	
 	private readonly IMessenger messenger = messenger;
 
 	public FolderModel GetModel(string fullPath) {
 		lastAccessTimes[fullPath] = DateTime.Now;
-
+		
 		if (folderCache.TryGetValue(fullPath, out var cachedModel)) {
 			return cachedModel;
 		}
@@ -29,6 +30,26 @@ public class FolderDataService(IMessenger messenger) : ICacheManager {
 		return newModel;
 	}
 
+	public void AddReference(string path, object owner) {
+		if (!referenceOwners.TryGetValue(path, out var ownerSet)) {
+			ownerSet = [];
+			if (!referenceOwners.TryAdd(path, ownerSet)) {
+				// In case another thread got here first
+				referenceOwners.TryGetValue(path, out ownerSet);
+			}
+		}
+
+		if (ownerSet == null) return;
+		
+		lock (ownerSet) ownerSet.Add(owner);
+	}
+	
+	public void RemoveReference(string path, object owner) {
+		if (!referenceOwners.TryGetValue(path, out var owners)) return;
+		
+		lock(owners) owners.Remove(owner);
+	}
+	
 	public void EnsureChildrenAreLoaded(FolderModel model) {
 		if (model.ChildrenLoaded || !model.IsDirectory) return;
 
@@ -43,25 +64,59 @@ public class FolderDataService(IMessenger messenger) : ICacheManager {
 	}
 	
 	public void Prune() {
-		var expirationTime = TimeSpan.FromMinutes(10);
+		var expirationTime = TimeSpan.FromSeconds(10);
 		var now = DateTime.Now;
 		
-		//TODO CRITICAL: DONT PRUNE IF THEY'RE OPEN SOMEWHERE 
-		
 		var keysToRemove = lastAccessTimes
-		    .Where(pair => now - pair.Value > expirationTime)
-		    .Select(pair => pair.Key);
+		    .Where(pair => folderCache.TryGetValue(pair.Key, out var m) && m.ChildrenLoaded && now - pair.Value > expirationTime)
+		    .Select(pair => pair.Key).ToList();
 
 		foreach (var key in keysToRemove) {
-			if (folderCache.TryGetValue(key, out var parent)) {
-				parent.ChildrenLoaded = false;
+			if (referenceOwners.TryGetValue(key, out var owners)) {
+				lock(owners) if (owners.Count > 0) continue; // Its being used by something else
+			}
+
+			if (!folderCache.TryGetValue(key, out var m)) continue;
+
+			Console.WriteLine($"Pruned Folder {key}");
+			ClearAllChildren(m);
+		}
+	}
+
+	private void ClearAllChildren(FolderModel model) {
+		var nodesToClear = new Stack<FolderModel>();
+		nodesToClear.Push(model);
+
+		while (nodesToClear.Count > 0) {
+			var currentNode = nodesToClear.Pop();
+
+			if (referenceOwners.TryGetValue(currentNode.FullPath, out var owners)) {
+				lock(owners) if(owners.Count > 0) continue;
+			}
+
+			foreach (var child in currentNode.Children) {
+				if (!child.IsDirectory) continue;
+				nodesToClear.Push(child);
 			}
 			
-			Console.WriteLine($"Pruned Folder {key}");
-			folderCache.TryRemove(key, out _);
-			lastAccessTimes.TryRemove(key, out _);
-			activeWatchers.TryRemove(key, out _);
+			currentNode.Children.Clear();
+			currentNode.ChildrenLoaded = false;
+
+			folderCache.TryRemove(currentNode.FullPath, out _);
+			lastAccessTimes.TryRemove(currentNode.FullPath, out _);
+			activeWatchers.TryRemove(currentNode.FullPath, out var watcher);
+			watcher?.Dispose();
 		}
+	}
+
+	public void ClearAll() {
+		folderCache.Clear();
+		lastAccessTimes.Clear();
+		
+		foreach(var watcher in activeWatchers.Values) {
+			watcher.Dispose();
+		}
+		activeWatchers.Clear();
 	}
 
 	public void StartWatching(string path) {
@@ -69,7 +124,7 @@ public class FolderDataService(IMessenger messenger) : ICacheManager {
 
 		var watcher = new FileSystemWatcher(path) {
 			NotifyFilter = NotifyFilters.FileName | NotifyFilters.DirectoryName,
-			IncludeSubdirectories = false
+			IncludeSubdirectories = true
 		};
 
 		// TODO: Optimize events to fire in batches
@@ -83,41 +138,63 @@ public class FolderDataService(IMessenger messenger) : ICacheManager {
 	}
 
 	public void StopWatching(string path) {
+		if (referenceOwners.TryGetValue(path, out var owners)) {
+			lock(owners) if (owners.Count > 0) return;
+		}
+		
 		if (!activeWatchers.TryRemove(path, out var watcher)) return;
 		
-		watcher.EnableRaisingEvents = false;
 		watcher.Dispose();
 	}
 	
 	private void OnFileSystemRenamed(object sender, RenamedEventArgs e) {
 		var parentDir = Path.GetDirectoryName(e.FullPath)!;
 
-		Console.WriteLine("FolderDataService OnFileSystemRenamed:");
-		Console.WriteLine($"{e.OldName} {e.OldFullPath}");
-		Console.WriteLine($"{e.Name} {e.FullPath}");
+		// Console.WriteLine("FolderDataService OnFileSystemRenamed:");
+		// Console.WriteLine($"{e.OldName} {e.OldFullPath}");
+		// Console.WriteLine($"{e.Name} {e.FullPath}");
+
+		if (lastAccessTimes.TryGetValue(e.OldFullPath, out var dateTime)) {
+			lastAccessTimes.Remove(e.OldFullPath, out _);
+			lastAccessTimes.TryAdd(e.FullPath, dateTime);
+		}
+
+		if (referenceOwners.TryGetValue(e.OldFullPath, out var owners)) {
+			referenceOwners.Remove(e.OldFullPath, out _);
+			referenceOwners.TryAdd(e.FullPath, owners);
+		}
+
+		if (activeWatchers.TryGetValue(e.OldFullPath, out var watcher)) {
+			activeWatchers.Remove(e.OldFullPath, out _);
+			watcher.Path = e.FullPath;
+			if (!activeWatchers.TryAdd(e.FullPath, watcher)) {
+				watcher.Dispose();
+			}
+		}
 		
-		//TODO: I modify the name but I never reupdate the cache dictionary...
 		if (folderCache.TryGetValue(e.OldFullPath, out var model)) {
-			model.Name = e.Name!;
+			model.Name = Path.GetFileName(e.Name!);
 			model.FullPath = e.FullPath;
 
 			folderCache.Remove(e.OldFullPath, out _);
 			folderCache.TryAdd(e.FullPath, model);
-		} else {
-			Console.WriteLine("WHYYY");
 		}
-
-		// messenger.Send(new FolderContentsChangedMessage(parentDir));
 	}
 
 	private void OnFileSystemChanged(object sender, FileSystemEventArgs e) {
 		var parentDir = Path.GetDirectoryName(e.FullPath);
+		if (parentDir == null) return;
 
-		Console.WriteLine($"FolderDataService OnFileSystemChanged: {e.FullPath}");
+		// Console.WriteLine($"FolderDataService OnFileSystemChanged: {e.FullPath}");
+
+		lastAccessTimes.TryRemove(e.FullPath, out _);
+		referenceOwners.TryRemove(e.FullPath, out _);
+		if (activeWatchers.TryRemove(e.FullPath, out var watcher)) {
+			watcher.Dispose();
+		}
 		
 		if (folderCache.TryRemove(parentDir, out var model)) {
 			model.ChildrenLoaded = false;
-			GetModel(parentDir);
 		}
 
 		messenger.Send(new FolderContentsChangedMessage(parentDir));

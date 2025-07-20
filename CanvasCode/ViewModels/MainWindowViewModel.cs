@@ -52,15 +52,16 @@ public partial class MainWindowViewModel : ViewModelBase {
 	private void PopulateTree(string folderPath) {
 		if (!Directory.Exists(folderPath)) return;
 		
+		App.FolderService.ClearAll();
+		
 		//TODO: Load multiple folders
 		if (OpenFolderRoots.Count > 0) {
 			if (OpenFolderRoots[0].ToString() == Path.GetDirectoryName(folderPath)) return;
 			OpenFolderRoots.Clear();
 		}
 		
-		//TODO: Use FileSystemWatcher to watch for changes in the tree and update the UI
-		
 		OpenFolderRoots.Add(new FileNodeViewModel(new FolderModel(folderPath), App.FolderService, App.Messenger));
+		App.FolderService.StartWatching(folderPath);
 		OpenFolderRoots[0].IsExpanded = true;
 	}
 }

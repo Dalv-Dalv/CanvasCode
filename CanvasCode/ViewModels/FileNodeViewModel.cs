@@ -12,9 +12,9 @@ using CommunityToolkit.Mvvm.Messaging;
 
 namespace CanvasCode.ViewModels;
 
-public partial class FileNodeViewModel : ViewModelBase, IRecipient<FolderContentsChangedMessage> {
-	private readonly FolderDataService folderService = null!;
-	private readonly IMessenger messenger;
+public partial class FileNodeViewModel : ViewModelBase, IRecipient<FolderContentsChangedMessage>, IDisposable {
+	private readonly FolderDataService? folderService = null;
+	private readonly IMessenger? messenger = null;
 	
 	[ObservableProperty] private FolderModel model;
 	[ObservableProperty] private bool isExpanded;
@@ -30,6 +30,8 @@ public partial class FileNodeViewModel : ViewModelBase, IRecipient<FolderContent
 		folderService = service;
 		this.messenger = messenger;
 
+		folderService.AddReference(model.FullPath, this);
+		
 		messenger.RegisterAll(this);
 		
 		if (!Model.IsDirectory) return;
@@ -60,8 +62,6 @@ public partial class FileNodeViewModel : ViewModelBase, IRecipient<FolderContent
 			return;
 		}
 		
-		folderService.StartWatching(Model.FullPath);
-		
 		// Cancel any pending prune operation
 		pruneCts?.Cancel();
 		pruneCts = null;
@@ -69,11 +69,15 @@ public partial class FileNodeViewModel : ViewModelBase, IRecipient<FolderContent
 		if (childrenViewModelsLoaded) return;
 
 		await Task.Run(() => folderService.EnsureChildrenAreLoaded(Model));
+		
+		Children.Clear();
 
-		Children.Clear(); // Remove dummy node
-		foreach (var childModel in Model.Children)
+		var sortedChildren = GetSortedChildren(Model);
+
+		foreach (var childModel in sortedChildren) {
 			Children.Add(new FileNodeViewModel(childModel, folderService, messenger));
-			
+		}
+
 		childrenViewModelsLoaded = true;
 	}
 
@@ -81,26 +85,36 @@ public partial class FileNodeViewModel : ViewModelBase, IRecipient<FolderContent
 		pruneCts = new CancellationTokenSource();
 		var token = pruneCts.Token;
 		
-		Task.Delay(TimeSpan.FromMinutes(5), token).ContinueWith(t => {
+		Task.Delay(TimeSpan.FromSeconds(5), token).ContinueWith(t => {
 			if (t.IsCanceled) return;
 
 			Dispatcher.UIThread.Post(() => {
+				foreach (var child in Children) {
+					child.Dispose();
+				}
 				Children.Clear();
 				childrenViewModelsLoaded = false;
 				
-				folderService.StopWatching(model.FullPath);
-
 				if (ModelHasChildren()) Children.Add(new FileNodeViewModel());
 			});
 		}, TaskScheduler.Default);
 	}
 
 	public void Receive(FolderContentsChangedMessage message) {
-		if (Model.FullPath != message.path || !IsExpanded) return;
+		if (Model.FullPath != message.path) return;
 
+		folderService.RemoveReference(Model.FullPath, this);
 		Model = folderService.GetModel(message.path);
+		folderService.AddReference(Model.FullPath, this);
 		
 		Dispatcher.UIThread.Post(RefreshChildren);
+	}
+
+	private IOrderedEnumerable<FolderModel> GetSortedChildren(FolderModel model) {
+		var sortedChildModels = model.Children
+			 .OrderByDescending(m => m.IsDirectory)
+			 .ThenBy(m => m.Name, StringComparer.OrdinalIgnoreCase);
+		return sortedChildModels;
 	}
 
 	private void RefreshChildren() {
@@ -111,22 +125,29 @@ public partial class FileNodeViewModel : ViewModelBase, IRecipient<FolderContent
 
 		var vmsToRemove = Children.Where(vm => !modelChildren.ContainsKey(vm.Model.FullPath)).ToList();
 		foreach (var vmToRemove in vmsToRemove) {
-			vmToRemove.Cleanup();
+			vmToRemove.Dispose();
 			Children.Remove(vmToRemove);
 		}
 
-		foreach (var m in Model.Children) {
+		var sortedChildren = GetSortedChildren(Model);
+
+		foreach (var m in sortedChildren) {
 			if(currentChildren.ContainsKey(m.FullPath)) continue;
 			
 			Children.Add(new FileNodeViewModel(m, folderService, messenger));
 		}
 	}
 
-	private void Cleanup() {
-		messenger.UnregisterAll(this);
-	}
-
 	public override string ToString() {
 		return Model.Name;
+	}
+
+	public void Dispose() {
+		messenger?.UnregisterAll(this);
+		folderService?.RemoveReference(model.FullPath, this);
+		
+		foreach (var child in Children) {
+			child.Dispose();
+		}
 	}
 }

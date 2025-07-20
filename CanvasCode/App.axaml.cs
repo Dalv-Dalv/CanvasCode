@@ -26,7 +26,7 @@ public class App : Application {
 	public override void OnFrameworkInitializationCompleted() {
 		Messenger = new WeakReferenceMessenger();
 		FolderService = new FolderDataService(Messenger);
-		cacheEvictionService = new CacheEvictionService(FolderService, TimeSpan.FromMinutes(5));
+		cacheEvictionService = new CacheEvictionService(FolderService, TimeSpan.FromSeconds(10));
 
 		cacheEvictionService.StartAsync(CancellationToken.None);
 					
