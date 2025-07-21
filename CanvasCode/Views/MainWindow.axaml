@@ -83,9 +83,18 @@
                             <TreeDataTemplate x:DataType="vm:FileNodeViewModel" ItemsSource="{Binding Children}">
                                 <StackPanel Orientation="Horizontal" Spacing="4" PointerPressed="SolutionExplorerFile_OnPointerPressed">
                                     <Label FontFamily="{StaticResource PhosphorRegular}" 
-                                           Foreground="{Binding Model, Converter={StaticResource FileToColorConverter}}" 
-                                           Content="{Binding Model, Converter={StaticResource FileToIconConverter}}" 
-                                           VerticalAlignment="Center" FontSize="15" />
+                                           VerticalAlignment="Center" FontSize="15" >
+                                        <Label.Foreground>
+                                            <MultiBinding Converter="{StaticResource FileToColorConverter}">
+                                                <Binding Path="Model.Name"/> <Binding Path="Model.IsDirectory"/> <Binding Path="Model.IsAccessible"/>
+                                            </MultiBinding>
+                                        </Label.Foreground>
+                                        <Label.Content>
+                                            <MultiBinding Converter="{StaticResource FileToIconConverter}">
+                                                <Binding Path="Model.Name"/> <Binding Path="Model.IsDirectory"/> <Binding Path="Model.IsAccessible"/>
+                                            </MultiBinding>
+                                        </Label.Content>
+                                    </Label>
                                     <TextBlock Text="{Binding Model.Name}" 
                                                VerticalAlignment="Center" FontSize="15" />
                                 </StackPanel>

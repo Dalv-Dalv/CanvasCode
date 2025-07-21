@@ -56,7 +56,6 @@ public partial class MainWindowViewModel : ViewModelBase {
 		
 		//TODO: Load multiple folders
 		if (OpenFolderRoots.Count > 0) {
-			if (OpenFolderRoots[0].ToString() == Path.GetDirectoryName(folderPath)) return;
 			OpenFolderRoots.Clear();
 		}
 		

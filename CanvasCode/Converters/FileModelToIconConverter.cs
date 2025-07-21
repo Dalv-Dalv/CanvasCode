@@ -7,8 +7,8 @@ using CanvasCode.Models;
 
 namespace CanvasCode.Converters;
 
-public class FileModelToIconConverter : IValueConverter {
-	private static readonly Dictionary<string, string> FileToIcon = new Dictionary<string, string>() {
+public class FileModelToIconConverter : IMultiValueConverter {
+	private static readonly Dictionary<string, string> FileToIcon = new() {
 		{""      , "\uE230"},   {".cpp"  , "\uEB2E"}, {".xml"  , "\uE914"},
 		{".cs"   , "\uEB30"},   {".h"    , "\uEB2E"}, {".xaml" , "\uE914"},
 		{".txt"  , "\uE23A"},   {".css"  , "\uEB34"}, {".axaml", "\uE914"},
@@ -19,17 +19,19 @@ public class FileModelToIconConverter : IValueConverter {
 	private const string InaccessibleDirectoryIcon = "\uEB5E"; 
 	private const string HiddenDirectoryIcon = "\uE8F8";
 	
-	
-	public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture) {
-		if (value is not FolderModel model) return "";
-
-		switch (model.IsDirectory) {
-			case true when !model.IsAccessible:
+	public object? Convert(IList<object?> values, Type targetType, object? parameter, CultureInfo culture) {
+		if (values.Count < 3) return DefaultIcon;
+		if (values[0] is not string name) return DefaultIcon;
+		if (values[1] is not bool isDirectory) return DefaultIcon;
+		if (values[2] is not bool isAccessible) return DefaultIcon;
+		
+		switch (isDirectory) {
+			case true when !isAccessible:
 				return InaccessibleDirectoryIcon;
 			case true:
-				return (model.Name.Length > 0 && model.Name[0] == '.') ? HiddenDirectoryIcon : DirectoryIcon;
+				return (name.Length > 0 && name[0] == '.') ? HiddenDirectoryIcon : DirectoryIcon;
 			default: 
-				var extension = Path.GetExtension(model.Name);
+				var extension = Path.GetExtension(name);
 				return FileToIcon.GetValueOrDefault(extension, DefaultIcon);
 		}
 	}

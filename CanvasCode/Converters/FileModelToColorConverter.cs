@@ -8,7 +8,7 @@ using CanvasCode.Models;
 
 namespace CanvasCode.Converters;
 
-public class FileModelToColorConverter : IValueConverter {
+public class FileModelToColorConverter : IMultiValueConverter {
 	private static readonly Dictionary<string, IBrush> FileToIconColor = new Dictionary<string, IBrush>() {
 		{""      , new SolidColorBrush(new Color(255, 221, 221, 221))},
 		{".cs"   , new SolidColorBrush(new Color(255, 95 , 173, 101))},
@@ -35,6 +35,18 @@ public class FileModelToColorConverter : IValueConverter {
 		if (model.IsDirectory) return model.IsAccessible ? DefaultIconColor : InaccessibleIconColor;
 
 		var extension = Path.GetExtension(model.Name);
+		return FileToIconColor.GetValueOrDefault(extension, DefaultIconColor);
+	}
+	
+	public object? Convert(IList<object?> values, Type targetType, object? parameter, CultureInfo culture) {
+		if (values.Count < 3) return DefaultIconColor;
+		if (values[0] is not string name) return DefaultIconColor;
+		if (values[1] is not bool isDirectory) return DefaultIconColor;
+		if (values[2] is not bool isAccessible) return DefaultIconColor;
+		
+		if (isDirectory) return isAccessible ? DefaultIconColor : InaccessibleIconColor;
+
+		var extension = Path.GetExtension(name);
 		return FileToIconColor.GetValueOrDefault(extension, DefaultIconColor);
 	}
 	

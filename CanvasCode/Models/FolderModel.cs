@@ -19,7 +19,5 @@ public partial class FolderModel(string name, string fullPath, bool isDirectory,
 		Directory.Exists(fullPath), 
 		isAccessible) { }
 	
-	// Using an ObservableCollection is useful if you later want to
-	// lazy-load children when a node is expanded.
 	public ObservableCollection<FolderModel> Children { get; set; } = [];
 }

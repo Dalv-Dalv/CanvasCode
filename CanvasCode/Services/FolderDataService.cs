@@ -64,7 +64,7 @@ public class FolderDataService(IMessenger messenger) : ICacheManager {
 	}
 	
 	public void Prune() {
-		var expirationTime = TimeSpan.FromSeconds(10);
+		var expirationTime = TimeSpan.FromMinutes(10);
 		var now = DateTime.Now;
 		
 		var keysToRemove = lastAccessTimes
@@ -150,35 +150,29 @@ public class FolderDataService(IMessenger messenger) : ICacheManager {
 	private void OnFileSystemRenamed(object sender, RenamedEventArgs e) {
 		var parentDir = Path.GetDirectoryName(e.FullPath)!;
 
-		// Console.WriteLine("FolderDataService OnFileSystemRenamed:");
-		// Console.WriteLine($"{e.OldName} {e.OldFullPath}");
-		// Console.WriteLine($"{e.Name} {e.FullPath}");
-
-		if (lastAccessTimes.TryGetValue(e.OldFullPath, out var dateTime)) {
-			lastAccessTimes.Remove(e.OldFullPath, out _);
+		if (lastAccessTimes.TryRemove(e.OldFullPath, out var dateTime)) {
 			lastAccessTimes.TryAdd(e.FullPath, dateTime);
 		}
 
-		if (referenceOwners.TryGetValue(e.OldFullPath, out var owners)) {
-			referenceOwners.Remove(e.OldFullPath, out _);
+		if (referenceOwners.TryRemove(e.OldFullPath, out var owners)) {
 			referenceOwners.TryAdd(e.FullPath, owners);
 		}
 
-		if (activeWatchers.TryGetValue(e.OldFullPath, out var watcher)) {
-			activeWatchers.Remove(e.OldFullPath, out _);
+		if (activeWatchers.TryRemove(e.OldFullPath, out var watcher)) {
 			watcher.Path = e.FullPath;
 			if (!activeWatchers.TryAdd(e.FullPath, watcher)) {
 				watcher.Dispose();
 			}
 		}
 		
-		if (folderCache.TryGetValue(e.OldFullPath, out var model)) {
+		if (folderCache.TryRemove(e.OldFullPath, out var model)) {
 			model.Name = Path.GetFileName(e.Name!);
 			model.FullPath = e.FullPath;
 
-			folderCache.Remove(e.OldFullPath, out _);
 			folderCache.TryAdd(e.FullPath, model);
 		}
+		
+		messenger.Send(new FileRenamedMessage(parentDir, e.OldFullPath, e.FullPath));
 	}
 
 	private void OnFileSystemChanged(object sender, FileSystemEventArgs e) {
@@ -202,3 +196,4 @@ public class FolderDataService(IMessenger messenger) : ICacheManager {
 }
 
 public sealed record FolderContentsChangedMessage(string path);
+public sealed record FileRenamedMessage(string parentPath, string oldFullPath, string newFullPath);
