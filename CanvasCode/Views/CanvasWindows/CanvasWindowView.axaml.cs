@@ -4,8 +4,13 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Input;
+using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
+using Avalonia.Threading;
+using CanvasCode.Models.CommandPalettes;
+using CanvasCode.ViewModels;
 using CanvasCode.ViewModels.CanvasWindows;
+using CanvasCode.ViewModels.CommandPalettes;
 
 namespace CanvasCode.Views.CanvasWindows;
 
@@ -18,8 +23,6 @@ public partial class CanvasWindowView : UserControl {
 	}
 
 	ThumbEvent currentThumbEvent = ThumbEvent.None;
-	private Point initialPos;
-	private Size initialSize;
 	
 	public CanvasWindowView() {
 		InitializeComponent();
@@ -27,6 +30,8 @@ public partial class CanvasWindowView : UserControl {
 
 	private void Window_OnPointerPressed(object? sender, PointerPressedEventArgs e) {
 		e.Handled = true; // Stop propagation to the pan and zoom canvas
+		
+		BringToFront();
 	}
 
 	private void Thumb_OnDragStarted(object? sender, VectorEventArgs e) {
@@ -45,11 +50,6 @@ public partial class CanvasWindowView : UserControl {
 			"D"  => ThumbEvent.Drag,
 			_    => ThumbEvent.None
 		};
-
-		if (currentThumbEvent == ThumbEvent.None) return;
-
-		initialPos = vm.Position;
-		initialSize = vm.Size;
 	}
 	
 	private void Thumb_OnDrag(object? sender, VectorEventArgs e) {
@@ -68,7 +68,7 @@ public partial class CanvasWindowView : UserControl {
 	    var newTop = currentPosition.Y;
 
 	    
-	    // Left/right
+	    // Left/right resizing
 	    switch (currentThumbEvent) {
 		    case ThumbEvent.SizeL or ThumbEvent.SizeTL or ThumbEvent.SizeBL: // Left sided requires adjusting both width and position
 			    newLeft += delta.X;
@@ -118,5 +118,61 @@ public partial class CanvasWindowView : UserControl {
 
 	private void Thumb_OnDragCompleted(object? sender, VectorEventArgs e) {
 		currentThumbEvent = ThumbEvent.None;
+		BringToFront();
+	}
+
+	private void BringToFront() {
+		if (MainWindow.Instance.DataContext is not MainWindowViewModel vm) return;
+		if (DataContext is not CanvasWindowViewModel thisVm) return;
+		
+		vm.BringWindowToFront(thisVm);
+	}
+
+	private void Window_OnKeyDown(object? sender, KeyEventArgs e) {
+		if (DataContext is not CanvasWindowViewModel vm) return;
+
+		if (e.Key == Key.OemTilde && e.KeyModifiers == KeyModifiers.Control) {
+			vm.ToggleQuickActions(true);
+			e.Handled = true;
+			return;
+		}
+
+		if (!vm.IsQuickActionsOpen) return;
+
+		if (e.Key == Key.Escape) {
+			vm.ToggleQuickActions(false);
+			e.Handled = true;
+			return;
+		}
+		
+		int nr = e.Key switch {
+			>= Key.D1 and <= Key.D9 => e.Key - Key.D1,
+			>= Key.NumPad1 and <= Key.NumPad9 => e.Key - Key.NumPad1,
+			_ => -1
+		};
+
+		if (nr < 0) return;
+
+		if (vm.QuickActions?.SelectCommand(nr) == true) {
+			vm.ToggleQuickActions(false);	
+		}
+		e.Handled = true;
+	}
+
+	private void QuickActionButton_OnClick(object? sender, RoutedEventArgs e) {
+		if (DataContext is not CanvasWindowViewModel vm) return;
+
+		if (sender is not Control c) return;
+		if (c.DataContext is not CommandPaletteItem item) return;
+		
+		if(item.SubMenu == null) vm.ToggleQuickActions(false);
+	}
+
+	private void ComboBox_OnDropDownClosed(object? sender, EventArgs e) {
+		ActualWindow.Focus();
+	}
+
+	private void ActualWindow_OnAttachedToVisualTree(object? sender, VisualTreeAttachmentEventArgs e) {
+		ActualWindow.Focus();
 	}
 }

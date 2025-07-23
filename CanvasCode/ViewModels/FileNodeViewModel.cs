@@ -6,8 +6,10 @@ using System.Threading;
 using System.Threading.Tasks;
 using Avalonia.Threading;
 using CanvasCode.Models;
+using CanvasCode.Others;
 using CanvasCode.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 
 namespace CanvasCode.ViewModels;
@@ -19,7 +21,8 @@ public partial class FileNodeViewModel : ViewModelBase,
 	private readonly IMessenger? messenger = null;
 	
 	[ObservableProperty] private FolderModel model;
-	[ObservableProperty] private bool isExpanded;
+	[ObservableProperty] private bool isExpanded = false;
+	[ObservableProperty] private bool isRenaming = false;
 
 	private bool childrenViewModelsLoaded;
 	private CancellationTokenSource? pruneCts;
@@ -70,6 +73,47 @@ public partial class FileNodeViewModel : ViewModelBase,
 		SortChildren();
 
 		childrenViewModelsLoaded = true;
+	}
+
+	[RelayCommand]
+	private void Delete() {
+		Console.WriteLine($"Deleting file {Model.Name}");
+		folderService?.Delete(Model.FullPath);
+	}
+
+	[RelayCommand]
+	private void StartRename() {
+		Console.WriteLine($"Starting rename on file {Model.Name}");
+		IsRenaming = true;
+	}
+
+	[RelayCommand]
+	private void CommitRename(string newName) {
+		bool ValidateName(string name) {
+			return !string.IsNullOrWhiteSpace(name) && !name.Any(ch => "\\/:*?\"<>|".Contains(ch));
+		}
+		
+		if (!IsRenaming) return;
+		
+		Console.WriteLine($"Committing rename on file {Model.Name}, new name is {newName}");
+		CancelRename();
+
+		if (!ValidateName(newName)) return;
+		
+		folderService?.Rename(Model.FullPath, newName);
+	}
+
+	[RelayCommand]
+	private void CancelRename() {
+		Console.WriteLine($"Canceled rename on file {Model.Name}");
+		IsRenaming = false;
+	}
+
+	[RelayCommand]
+	private void Refresh() {
+		Console.WriteLine($"Refresh file {Model.Name}");
+		
+		RefreshChildren();
 	}
 
 	private void SchedulePrune() {
@@ -149,7 +193,7 @@ public partial class FileNodeViewModel : ViewModelBase,
 	}
 
 	private void RefreshChildren() {
-		folderService.EnsureChildrenAreLoaded(Model);
+		folderService?.EnsureChildrenAreLoaded(Model);
 	
 		var currentChildren = Children.ToDictionary(vm => vm.Model.FullPath);
 		var modelChildren = Model.Children.ToDictionary(m => m.FullPath);

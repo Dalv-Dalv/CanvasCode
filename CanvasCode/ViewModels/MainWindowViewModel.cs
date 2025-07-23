@@ -7,60 +7,75 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Platform.Storage;
 using CanvasCode.Models;
+using CanvasCode.Others;
 using CanvasCode.ViewModels.CanvasWindows;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
 
 namespace CanvasCode.ViewModels;
 
-public partial class MainWindowViewModel : ViewModelBase {
+public partial class MainWindowViewModel : ViewModelBase, IRecipient<EnterFullscreenMessage>, IRecipient<ExitFullscreenMessage> {
 	
 	[ObservableProperty] private string? currentFolder = null;
+	[ObservableProperty] private bool isFullscreen;
+    
+	[ObservableProperty]
+	private ICanvasWindowContentViewModel? fullscreenContent;
 	
-	public ObservableCollection<FileNodeViewModel> OpenFolderRoots { get; } = [];
-	public readonly Action<string> OnFolderChanged;
-
 	public ObservableCollection<CanvasWindowViewModel> Windows { get; } = [];
+
+	private Point lastRightClickPos;
 	
 	public MainWindowViewModel() {
-		OnFolderChanged += PopulateTree;
-		
-		OpenNewWindow(new Point(500, 500));
+		App.Messenger.RegisterAll(this);
 	}
 
+
+	[RelayCommand]
+	private void OpenNewWindow(object? parameter) {
+		OpenNewWindow(lastRightClickPos, CanvasWindowType.FolderTree);
+	}
+	public void SetLastRightClickPos(Point pos) => lastRightClickPos = pos;
 	public void OpenNewWindow(Point pos, CanvasWindowType type = CanvasWindowType.CodeEditor) {
+		var size = new Size(500, 500);
 		Windows.Add(new CanvasWindowViewModel {
-			Position = pos,
-			Size = new Size(300, 300),
+			Position = pos - new Point(size.Width / 2, size.Height / 2),
+			Size = size,
 			SelectedType = type
 		});
 	}
-	
-	public async void SelectFolderCommand(Window window) {
-		var folders = await window.StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions {
-			Title = "Select folder", AllowMultiple = false
-		});
-
-		if (folders.Count <= 0) return;
-		
-		var path = folders[0].TryGetLocalPath();
-		if (path == null || path == CurrentFolder) return;
-		
-		CurrentFolder = path;
-		OnFolderChanged.Invoke(path);
+	public void OpenNewWindow(Point pos, object data, CanvasWindowType type = CanvasWindowType.CodeEditor) {
+		var size = new Size(500, 500);
+		var window = new CanvasWindowViewModel {
+			Position = pos - new Point(size.Width / 2, size.Height / 2),
+			Size = size,
+			SelectedType = type
+		};
+		window.SetData(data);
+		Windows.Add(window);
 	}
 
-	private void PopulateTree(string folderPath) {
-		if (!Directory.Exists(folderPath)) return;
+	public void BringWindowToFront(CanvasWindowViewModel? window) {
+		if (window == null) return;
+        
+		var index = Windows.IndexOf(window);
+
+		if (index < 0 || index >= Windows.Count - 1) return;
 		
-		App.FolderService.ClearAll();
-		
-		//TODO: Load multiple folders
-		if (OpenFolderRoots.Count > 0) {
-			OpenFolderRoots.Clear();
-		}
-		
-		OpenFolderRoots.Add(new FileNodeViewModel(new FolderModel(folderPath), App.FolderService, App.Messenger));
-		App.FolderService.StartWatching(folderPath);
-		OpenFolderRoots[0].IsExpanded = true;
+		Windows.Move(index, Windows.Count - 1);
+	}
+
+	public void CloseWindow(CanvasWindowViewModel window) {
+		Windows.Remove(window);
+	}
+	
+	public void Receive(EnterFullscreenMessage message) {
+		IsFullscreen = true;
+		FullscreenContent = message.ContentToDisplay;
+	}
+	public void Receive(ExitFullscreenMessage message) {
+		IsFullscreen = false;
+		FullscreenContent = null;
 	}
 }

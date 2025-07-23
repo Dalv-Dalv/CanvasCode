@@ -3,43 +3,84 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="clr-namespace:CanvasCode.ViewModels.CanvasWindows"
+             xmlns:cc="clr-namespace:CanvasCode.Controls"
+             xmlns:cpvm="clr-namespace:CanvasCode.ViewModels.CommandPalettes"
+             xmlns:converters="clr-namespace:CanvasCode.Converters"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="CanvasCode.Views.CanvasWindows.CanvasWindowView"
-             x:DataType="vm:CanvasWindowViewModel">
+             x:DataType="vm:CanvasWindowViewModel"
+             Foreground="{StaticResource PrimaryText}">
     
     <Design.DataContext>
         <vm:CanvasWindowViewModel/>
     </Design.DataContext>
+
+    <UserControl.Resources>
+        <ControlTheme x:Key="ThumbTheme" TargetType="Thumb">
+            <Setter Property="Template">
+                <ControlTemplate>
+                    <Border Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            Cursor="{TemplateBinding Cursor}"/>
+                </ControlTemplate>
+            </Setter>
+        </ControlTheme>
+    </UserControl.Resources>
     
     <Grid ColumnDefinitions="8, *, 8" RowDefinitions="8, *, 8">
         <!--Actual window-->
-        <Grid Grid.Row="1" Grid.Column="1" Margin="-4" RowDefinitions="Auto, Auto, *" PointerPressed="Window_OnPointerPressed">
-            <Border Grid.Row="0"
-                    Height="32"
-                    Classes="panel"
-                    BorderThickness="1 1 1 0"
-                    CornerRadius="10 10 0 0">
-                <Grid ColumnDefinitions="Auto, *, Auto">
-                    <ComboBox Grid.Column="0"
-                              CornerRadius="10 5 5 5"
-                              ItemsSource="{Binding AvailableTypes}"
-                              SelectedItem="{Binding SelectedType, Mode=TwoWay}"/>
-                    <Thumb Grid.Column="1" x:Name="D" DragDelta="Thumb_OnDrag" DragStarted="Thumb_OnDragStarted" DragCompleted="Thumb_OnDragCompleted" Background="Transparent" Theme="{StaticResource ThumbTheme}"/>
-                    <TextBlock Grid.Column="1" Text="{Binding Title}" VerticalAlignment="Center" Margin="10 0 0 0" IsHitTestVisible="False"/>
+        <Grid Grid.Row="1" Grid.Column="1" KeyDown="Window_OnKeyDown" Focusable="True" x:Name="ActualWindow" AttachedToVisualTree="ActualWindow_OnAttachedToVisualTree" PointerPressed="Window_OnPointerPressed">
+            <Border ClipToBounds="True" CornerRadius="10">
+                <Grid RowDefinitions="Auto, Auto, *">
+                    <Border Grid.Row="0" Height="34" Background="{StaticResource PanelColor}" IsVisible="{Binding IsHeaderVisible}">
+                        <Grid ColumnDefinitions="Auto, *, Auto">
+                            <ComboBox Grid.Column="0" CornerRadius="8" MinHeight="0" Margin="2 0" VerticalAlignment="Center"
+                                      ItemsSource="{Binding AvailableTypes}"
+                                      SelectedItem="{Binding SelectedType, Mode=TwoWay}" DropDownClosed="ComboBox_OnDropDownClosed"/>
+                            
+                            <Thumb Grid.Column="1" x:Name="D" DragDelta="Thumb_OnDrag" DragStarted="Thumb_OnDragStarted" DragCompleted="Thumb_OnDragCompleted" Background="Transparent" Theme="{StaticResource ThumbTheme}"/>
                 
-                    <Button Grid.Column="2" Classes="panelButton">
-                        <Label Content="&#xE4F8;" FontFamily="{StaticResource PhosphorFill}" FontSize="20"/>
-                    </Button>
+                            <Button Grid.Column="2" Classes="panelButton" Command="{Binding CloseWindowCommand}">
+                                <Label Content="&#xE4F6;" Classes="icon" FontSize="20" Padding="0 0 8 0"/>
+                            </Button>
+                        </Grid>
+                    </Border>
+            
+                    <Border Grid.Row="2" Background="{StaticResource PrimaryBackground}" Padding="5">
+                        <ContentControl Content="{Binding CurrentContent}"/>
+                    </Border>
                 </Grid>
             </Border>
-            <Rectangle Grid.Row="1" Height="1" Fill="{StaticResource PanelHighlight}"></Rectangle>
-            <Border Grid.Row="2" 
-                    Background="{StaticResource PrimaryBackground}"
-                    BorderBrush="{StaticResource PanelHighlight}"
-                    BorderThickness="1 0 1 1"
-                    CornerRadius="0 0 10 10">
-                <ContentControl Content="{Binding CurrentContent}"/>
-            </Border>
+            
+            <Border BorderBrush="{StaticResource PanelHighlight}" CornerRadius="10"
+                    BorderThickness="1"/>
+            
+            <Grid ColumnDefinitions="*, Auto, *" RowDefinitions="*, Auto, *" IsVisible="{Binding IsQuickActionsOpen}">
+                <Border Grid.Column="1" Grid.Row="1" Background="{StaticResource PanelColor}" Padding="10"
+                        CornerRadius="10" BorderBrush="{StaticResource PanelHighlight}" BorderThickness="2"
+                        BoxShadow="0 3 50 10 #5F000003">
+                    <StackPanel DataContext="{Binding QuickActions}">
+                        <Label Content="{Binding CurrentTitle}" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0 -5 0 4"/>
+                        <ItemsControl ItemsSource="{Binding DisplayedCommands}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Button Padding="0 0 10 0" HorizontalAlignment="Stretch"
+                                            Command="{Binding $parent[ItemsControl].((cpvm:CommandPaletteViewModel)DataContext).SelectCommandByButtonCommand}"
+                                            CommandParameter="{Binding}"
+                                            Click="QuickActionButton_OnClick" Classes="quickActionButton">  
+                                        <Grid ColumnDefinitions="20, *"> 
+                                            <Label Grid.Column="0" 
+                                                   Content="{Binding Index}" HorizontalAlignment="Right" VerticalAlignment="Center" Foreground="{StaticResource SecondaryText}"/> 
+                                            <Label Grid.Column="1" Content="{Binding Name}" HorizontalAlignment="Left" VerticalAlignment="Center" Foreground="{StaticResource PrimaryText}"/> 
+                                        </Grid>
+                                    </Button> 
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+            </Grid>
         </Grid>
         
         <!-- Corner resize handles -->
@@ -54,17 +95,4 @@
         <Thumb x:Name="R" DragDelta="Thumb_OnDrag" DragStarted="Thumb_OnDragStarted" DragCompleted="Thumb_OnDragCompleted" Cursor="SizeWestEast"   Background="Transparent" Theme="{StaticResource ThumbTheme}" Grid.Row="1" Grid.Column="2"/>
         <Thumb x:Name="B" DragDelta="Thumb_OnDrag" DragStarted="Thumb_OnDragStarted" DragCompleted="Thumb_OnDragCompleted" Cursor="SizeNorthSouth" Background="Transparent" Theme="{StaticResource ThumbTheme}" Grid.Row="2" Grid.Column="1"/>
     </Grid>
-    
-    <UserControl.Resources>
-        <ControlTheme x:Key="ThumbTheme" TargetType="Thumb">
-            <Setter Property="Template">
-                <ControlTemplate>
-                    <Border Background="{TemplateBinding Background}"
-                            BorderBrush="{TemplateBinding BorderBrush}"
-                            BorderThickness="{TemplateBinding BorderThickness}"
-                            Cursor="{TemplateBinding Cursor}"/>
-                </ControlTemplate>
-            </Setter>
-        </ControlTheme>
-    </UserControl.Resources>
 </UserControl>

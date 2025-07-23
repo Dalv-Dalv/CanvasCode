@@ -358,7 +358,7 @@ public class Shader : UserControl {
 
 			_uniforms ??= new SKRuntimeEffectUniforms(_effect);
 			
-			if(_isAnimated) _uniforms["iTime"] = (float)CompositionNow.TotalSeconds;
+			if(_isAnimated) _uniforms["iTime"] = App.GetCurrentTime();
 			_uniforms["iResolution"] = new[] { targetWidth, targetHeight };
 			if (_customUniforms != null) {
 				foreach (var (name, value) in _customUniforms) {

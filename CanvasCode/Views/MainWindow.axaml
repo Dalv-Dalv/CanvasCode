@@ -8,6 +8,9 @@
         xmlns:converters="clr-namespace:CanvasCode.Converters"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:i="clr-namespace:Avalonia.Xaml.Interactivity;assembly=Xaml.Behaviors.Interactivity"
+        xmlns:localBehaviours="clr-namespace:CanvasCode.Behaviours"
+        xmlns:behaviours="clr-namespace:Avalonia.Xaml.Interactions.Core;assembly=Xaml.Behaviors.Interactions"
         xmlns:controls="using:CanvasCode.Controls"
         xmlns:paz="using:Avalonia.Controls.PanAndZoom"
         mc:Ignorable="d" d:DesignWidth="1920" d:DesignHeight="1080"
@@ -28,89 +31,43 @@
     </Design.DataContext>
 
     <Grid>
-        <controls:Shader x:Name="ShaderHost" ShaderUri="avares://CanvasCode/Assets/Shaders/CanvasBG.sksl" Stretch="Fill" IsAnimated="True" AnimationFrameRate="5" />
+        <Grid IsVisible="{Binding !IsFullscreen}">
+            <controls:Shader x:Name="CanvasShader" ShaderUri="avares://CanvasCode/Assets/Shaders/CanvasBG.sksl" Stretch="Fill" IsAnimated="True" AnimationFrameRate="5"/>
 
-        <paz:ZoomBorder x:Name="MainCanvas" PointerPressed="MainCanvas_OnPointerPressed" PointerReleased="MainCanvas_OnPointerReleased" PointerMoved="MainCanvas_OnPointerMoved" ZoomChanged="MainCanvas_OnZoomChanged"
-                        Stretch="None" ClipToBounds="True" Focusable="True" PanButton="Left" MinZoomX="0.1" MinZoomY="0.1" MaxZoomX="10" MaxZoomY="10" 
-                        DragDrop.AllowDrop="True">
-            
-            <ItemsControl x:Name="WindowsItemsControl" ItemsSource="{Binding Windows}" ClipToBounds="False">
-                <ItemsControl.ItemsPanel>
-                    <ItemsPanelTemplate>
-                        <Canvas/>
-                    </ItemsPanelTemplate>
-                </ItemsControl.ItemsPanel>
-            
-                <ItemsControl.ItemTemplate>
-                    <DataTemplate>
-                        <cwv:CanvasWindowView Width="{Binding Size.Width}" MinWidth="300" MinHeight="300"
-                                              Height="{Binding Size.Height}"/>
-                    </DataTemplate>
-                </ItemsControl.ItemTemplate>
+            <paz:ZoomBorder x:Name="MainCanvas" PointerPressed="MainCanvas_OnPointerPressed" PointerReleased="MainCanvas_OnPointerReleased" PointerMoved="MainCanvas_OnPointerMoved" ZoomChanged="MainCanvas_OnZoomChanged"
+                            Stretch="None" ClipToBounds="True" Focusable="True" PanButton="Left" MinZoomX="0.1" MinZoomY="0.1" MaxZoomX="10" MaxZoomY="10" 
+                            DragDrop.AllowDrop="True">
                 
-                <ItemsControl.ItemContainerTheme>
-                    <ControlTheme TargetType="ContentPresenter" x:DataType="cwvm:CanvasWindowViewModel">
-                        <Setter Property="Canvas.Left" Value="{Binding Position.X}"/>
-                        <Setter Property="Canvas.Top" Value="{Binding Position.Y}"/>
-                    </ControlTheme>
-                </ItemsControl.ItemContainerTheme>
-            </ItemsControl>
-            
-        </paz:ZoomBorder>
-
-
-        <Grid>
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="0.25*" MinWidth="100" MaxWidth="600" />
-                <ColumnDefinition Width="6" />
-                <ColumnDefinition Width="*" />
-            </Grid.ColumnDefinitions>
-            <Border Grid.Column="0" Classes="panel" Margin="4 4 -2 4" HorizontalAlignment="Stretch">
-                <Grid RowDefinitions="Auto, Auto, *">
-                    <Grid Grid.Row="0" ColumnDefinitions="Auto, *, Auto">
-                        <StackPanel Grid.Column="1" Orientation="Horizontal">
-                            <Button Classes="panelButton" FontFamily="{StaticResource PhosphorRegular}" Content="&#xE256;" FontSize="20" Padding="6"
-                                    Command="{Binding SelectFolderCommand}" CommandParameter="{Binding $parent[Window]}" />
-                        </StackPanel>
-
-                        <Button Grid.Column="2" Classes="panelButton" FontFamily="{StaticResource PhosphorRegular}" Content="&#xE32A;" FontSize="20" Padding="6 6 8 6" />
-                    </Grid>
-
-                    <Rectangle Grid.Row="1" Classes="horizontalSeparator" />
-
-                    <TreeView Grid.Row="2" VerticalAlignment="Stretch" ItemsSource="{Binding OpenFolderRoots}" SelectionMode="Multiple">
-                        <TreeView.ItemTemplate>
-                            <TreeDataTemplate x:DataType="vm:FileNodeViewModel" ItemsSource="{Binding Children}">
-                                <StackPanel Orientation="Horizontal" Spacing="4" PointerPressed="SolutionExplorerFile_OnPointerPressed">
-                                    <Label FontFamily="{StaticResource PhosphorRegular}" 
-                                           VerticalAlignment="Center" FontSize="15" >
-                                        <Label.Foreground>
-                                            <MultiBinding Converter="{StaticResource FileToColorConverter}">
-                                                <Binding Path="Model.Name"/> <Binding Path="Model.IsDirectory"/> <Binding Path="Model.IsAccessible"/>
-                                            </MultiBinding>
-                                        </Label.Foreground>
-                                        <Label.Content>
-                                            <MultiBinding Converter="{StaticResource FileToIconConverter}">
-                                                <Binding Path="Model.Name"/> <Binding Path="Model.IsDirectory"/> <Binding Path="Model.IsAccessible"/>
-                                            </MultiBinding>
-                                        </Label.Content>
-                                    </Label>
-                                    <TextBlock Text="{Binding Model.Name}" 
-                                               VerticalAlignment="Center" FontSize="15" />
-                                </StackPanel>
-                            </TreeDataTemplate>
-                        </TreeView.ItemTemplate>
-
-                        <TreeView.Styles>
-                            <Style Selector="TreeViewItem" x:DataType="vm:FileNodeViewModel">
-                                <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}"/>
-                                <Setter Property="IsEnabled" Value="{Binding Model.IsAccessible}"/>
-                            </Style>
-                        </TreeView.Styles>
-                    </TreeView>
-                </Grid>
-            </Border>
-            <GridSplitter Grid.Column="1" Background="Transparent" ResizeDirection="Columns" Margin="0 4" />
+                <ItemsControl x:Name="WindowsItemsControl" ItemsSource="{Binding Windows}" ClipToBounds="False">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <Canvas PointerPressed="Canvas_OnPointerPressed"/>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <cwv:CanvasWindowView Width="{Binding Size.Width}" MinWidth="300" MinHeight="300"
+                                                  Height="{Binding Size.Height}"/>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                    
+                    <ItemsControl.ItemContainerTheme>
+                        <ControlTheme TargetType="ContentPresenter" x:DataType="cwvm:CanvasWindowViewModel">
+                            <Setter Property="Canvas.Left" Value="{Binding Position.X}"/>
+                            <Setter Property="Canvas.Top" Value="{Binding Position.Y}"/>
+                        </ControlTheme>
+                    </ItemsControl.ItemContainerTheme>
+                </ItemsControl>
+                
+                <paz:ZoomBorder.ContextMenu>
+                    <ContextMenu>
+                        <MenuItem Header="Open new window" Command="{Binding OpenNewWindowCommand}"/>
+                    </ContextMenu>
+                </paz:ZoomBorder.ContextMenu>
+            </paz:ZoomBorder>
         </Grid>
+        
+        <ContentControl Content="{Binding FullscreenContent}" IsVisible="{Binding IsFullscreen}"/>
     </Grid>
 </Window>

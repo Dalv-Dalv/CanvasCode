@@ -1,24 +1,32 @@
 ﻿<Styles xmlns="https://github.com/avaloniaui"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:vm="clr-namespace:CanvasCode.ViewModels"
-        xmlns:converters="using:Avalonia.Controls.Converters">
+        xmlns:sys="using:System"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <Design.PreviewWith>
-        <Border Padding="20"
-                MinWidth="300">
-            <TreeView Classes="fileBrowser">
-                <TreeViewItem Header="Level 1" IsExpanded="True">
-                    <TreeViewItem Header="Level 2.1" IsSelected="True" IsExpanded="True">
-                        <TreeViewItem Header="Level 3.1" />
-                        <TreeViewItem Header="Level 3.2" IsSelected="True">
-                            <TreeViewItem Header="Level 4" />
-                        </TreeViewItem>
-                    </TreeViewItem>
-                    <TreeViewItem Header="Level 2.2" IsEnabled="False" />
-                </TreeViewItem>
-            </TreeView>
+        <Border Padding="200" Background="{StaticResource PrimaryBackground}">
+            <StackPanel Spacing="10">
+                <ComboBox PlaceholderText="Select an item">
+                    <ComboBoxItem>Item 1</ComboBoxItem>
+                    <ComboBoxItem>Item 2</ComboBoxItem>
+                </ComboBox>
+                <ComboBox IsEnabled="False"
+                          Width="200"
+                          SelectedIndex="1"
+                          HorizontalContentAlignment="Center">
+                    <ComboBoxItem>Item 1</ComboBoxItem>
+                    <ComboBoxItem>Item 2</ComboBoxItem>
+                </ComboBox>
+                <ComboBox PlaceholderText="Error">
+                    <DataValidationErrors.Error>
+                        <sys:Exception>
+                            <x:Arguments>
+                                <x:String>Error</x:String>
+                            </x:Arguments>
+                        </sys:Exception>
+                    </DataValidationErrors.Error>
+                </ComboBox>
+            </StackPanel>
         </Border>
     </Design.PreviewWith>
-
     <Style Selector="Border.panel">
         <Setter Property="Background" Value="{DynamicResource PanelColor}"/>
         <Setter Property="BorderBrush" Value="{DynamicResource PanelHighlight}"/>
@@ -45,26 +53,38 @@
         <Setter Property="Foreground" Value="{DynamicResource PanelColor}"/>
     </Style>
     
+    <Style Selector="Button.quickActionButton">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Foreground" Value="{DynamicResource PrimaryText}"/>
+        <Setter Property="Padding" Value="0 0 10 0"/>
+        <Setter Property="CornerRadius" Value="5"/>
+        <Setter Property="HorizontalAlignment" Value="Stretch"/>
+    </Style>
+    <Style Selector="Button.quickActionButton:pointerover /template/ ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource PanelHighlight}"/>
+        <Setter Property="Foreground" Value="White"/>
+    </Style>
+    <Style Selector="Button.quickActionButton:disabled /template/ ContentPresenter">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Foreground" Value="{DynamicResource PrimaryText}"/>
+    </Style>
+    <Style Selector="Button.quickActionButton:pressed /template/ ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource PrimarySeparator}"/>
+        <Setter Property="Foreground" Value="{DynamicResource PanelColor}"/>
+    </Style>
+    
     <Style Selector="Rectangle.horizontalSeparator">
         <Setter Property="Height" Value="2"/>
         <Setter Property="Margin" Value="0 1.5"/>
         <Setter Property="Fill" Value="{DynamicResource PrimarySeparator}"/>
     </Style>
     
-    <!-- <Style Selector="TreeView.fileBrowser"> -->
-    <!--     <Setter Property="ItemTemplate"> -->
-    <!--         <TreeDataTemplate x:DataType="vm:FileNodeViewModel" ItemsSource="{Binding Children}"> -->
-    <!--             <StackPanel Orientation="Horizontal"> -->
-    <!--                 <Border Width="10" VerticalAlignment="Stretch" Background="Red"/> -->
-    <!--                 <TextBlock Text="{Binding Name}" VerticalAlignment="Center"/> -->
-    <!--             </StackPanel> -->
-    <!--         </TreeDataTemplate> -->
-    <!--     </Setter> -->
-    <!--     <Setter Property="ItemContainerTheme"> -->
-    <!--         <ControlTheme TargetType="TreeViewItem" x:DataType="vm:FileNodeViewModel"> -->
-    <!--             <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}" /> -->
-    <!--              -->
-    <!--         </ControlTheme> -->
-    <!--     </Setter> -->
-    <!-- </Style> -->
+    <Style Selector="Label.icon">
+        <Setter Property="Foreground" Value="{DynamicResource PrimaryText}"/>
+        <Setter Property="FontFamily" Value="{DynamicResource PhosphorRegular}"/>
+    </Style>
+    <Style Selector="Label.iconFill">
+        <Setter Property="Foreground" Value="{DynamicResource PrimaryText}"/>
+        <Setter Property="FontFamily" Value="{DynamicResource PhosphorFill}"/>
+    </Style>
 </Styles>

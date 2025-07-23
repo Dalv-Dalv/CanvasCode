@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using CanvasCode.Models;
+using CanvasCode.Others;
 using CommunityToolkit.Mvvm.Messaging;
 
 namespace CanvasCode.Services;
@@ -17,6 +18,46 @@ public class FolderDataService(IMessenger messenger) : ICacheManager {
 	
 	private readonly IMessenger messenger = messenger;
 
+
+	public void Delete(string path) {
+		try {
+			if (Directory.Exists(path)) Directory.Delete(path, recursive: true);
+			else if (File.Exists(path)) File.Delete(path);
+		} catch (Exception ex) {
+			Console.WriteLine("DELETE FAILED:");
+			Console.WriteLine(ex.Message);
+		}
+	}
+
+	public void Rename(string oldPath, string newName) {
+		try {
+			var parentDir = Path.GetDirectoryName(oldPath);
+			if (parentDir == null) return;
+
+			var newPath = Path.Combine(parentDir, newName);
+
+			if (Directory.Exists(oldPath)) Directory.Move(oldPath, newPath);
+			else if (File.Exists(oldPath)) File.Move(oldPath, newPath);
+		} catch (Exception ex) {
+			Console.WriteLine("RENAME FAILED:");
+			Console.WriteLine(ex.Message);
+		}
+	}
+	
+	public void Move(string sourcePath, string destinationPath) {
+		try {
+			var newPath = Path.Combine(destinationPath, Path.GetFileName(sourcePath));
+			
+			if (Directory.Exists(sourcePath)) {
+				Directory.Move(sourcePath, newPath);
+			} else if (File.Exists(sourcePath)) {
+				File.Move(sourcePath, newPath);
+			}
+		} catch (Exception ex) {
+			Console.WriteLine($"Moving exception: {ex.Message}");
+		}
+	}
+	
 	public FolderModel GetModel(string fullPath) {
 		lastAccessTimes[fullPath] = DateTime.Now;
 		
@@ -194,6 +235,3 @@ public class FolderDataService(IMessenger messenger) : ICacheManager {
 		messenger.Send(new FolderContentsChangedMessage(parentDir));
 	}
 }
-
-public sealed record FolderContentsChangedMessage(string path);
-public sealed record FileRenamedMessage(string parentPath, string oldFullPath, string newFullPath);

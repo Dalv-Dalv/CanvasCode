@@ -5,6 +5,7 @@
       <map>
         <entry key="CanvasCode/App.axaml" value="CanvasCode/CanvasCode.csproj" />
         <entry key="CanvasCode/Controls/CanvasWindow.axaml" value="CanvasCode/CanvasCode.csproj" />
+        <entry key="CanvasCode/Controls/ComboBox.axaml" value="CanvasCode/CanvasCode.csproj" />
         <entry key="CanvasCode/Controls/ResizableWindow.axaml" value="CanvasCode/CanvasCode.csproj" />
         <entry key="CanvasCode/Controls/TemplatedControl1.axaml" value="CanvasCode/CanvasCode.csproj" />
         <entry key="CanvasCode/Controls/wewe.axaml" value="CanvasCode/CanvasCode.csproj" />

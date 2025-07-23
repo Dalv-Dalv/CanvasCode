@@ -33,23 +33,27 @@
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
-                <ResourceInclude Source="avares://CanvasCode/Styles/SolutionExplorerStyles.axaml"/>
+                <MergeResourceInclude Source="avares://CanvasCode/Styles/SolutionExplorerStyles.axaml"/>
+                <MergeResourceInclude Source="/Controls/ComboBox.axaml"/>
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
         
         <FontFamily x:Key="PhosphorFill">Assets/Fonts/Phosphor-Fill.ttf#Phosphor-Fill</FontFamily>
         <FontFamily x:Key="PhosphorRegular">Assets/Fonts/Phosphor.ttf#Phosphor</FontFamily>
         
-        <SolidColorBrush x:Key="PrimaryBackground">#1F2023</SolidColorBrush>
+        <SolidColorBrush x:Key="PrimaryBackground">#1E1F22</SolidColorBrush>
         <SolidColorBrush x:Key="PrimarySeparator">#7F3C3F45</SolidColorBrush>
         
-        <SolidColorBrush x:Key="PanelColor">#2D2F33</SolidColorBrush>
-        <SolidColorBrush x:Key="PanelHighlight">#3C3F45</SolidColorBrush>
+        <SolidColorBrush x:Key="PrimaryHover">#7F3C3F45</SolidColorBrush>
+        
+        <SolidColorBrush x:Key="PanelColor">#2B2D30</SolidColorBrush>
+        <SolidColorBrush x:Key="PanelHighlight">#43454A</SolidColorBrush>
         
         <SolidColorBrush x:Key="PrimaryShadow">#10f0f8ff</SolidColorBrush> <!-- These dont work in boxshadow, idk -->
         <SolidColorBrush x:Key="SecondaryShadow">#30f0f8ff</SolidColorBrush> <!-- These dont work in boxshadow, idk -->
         
-        <SolidColorBrush x:Key="PrimaryText">#DDD</SolidColorBrush>
+        <SolidColorBrush x:Key="PrimaryText">#DFE1E5</SolidColorBrush>
+        <SolidColorBrush x:Key="SecondaryText">#6F737A</SolidColorBrush>
     </Application.Resources>
     
 </Application>

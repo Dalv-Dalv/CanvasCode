@@ -1,6 +1,8 @@
 ﻿uniform float2 iResolution;
 uniform float iTime;
 uniform float posx, posy;
+uniform float hover_posx, hover_posy, hover_mul;
+uniform float hover_start_time;
 
 float step(float edge, float x){
 	return x < edge ? 0.0 : 1.0;
@@ -15,17 +17,27 @@ float4 main(float2 fragCoord) {
 	float2 coord = fragCoord + float2(-posx, -posy);
     float2 uv = fract(coord / 100.0);
     float2 screenUV = fragCoord / iResolution;
+    float2 hover_uv = (coord - float2(hover_posx, hover_posy)) / 100.0;
 	uv = uv * 2 - float2(1.0);
-	uv = abs(uv);
+	uv = abs(uv); 
 	
 	float dist = length(uv) - 0.03;
+	float hover_dist = length(hover_uv);
+	hover_dist = 1.0 - clamp(0.0, 1.0, (hover_dist - clamp(0.0, 0.5, iTime - hover_start_time) * 1.0));
+	hover_dist *= cos(hover_dist * 2.0 - iTime * 8.0 - hover_start_time) * 0.5 + 0.7;
+	hover_dist = clamp(0.0, 1.0, hover_dist);
 	
-	float3 col = 0.5 + 0.5*cos(iTime * 0.25 +float3(screenUV,0)+float3(0,2,4));
-	col = mix(col, float3(0.122, 0.125, 0.137) * 0.8, 0.7);
+	
+	float3 bgCol = 0.5 + 0.5*cos(iTime + float3(screenUV,0) + float3(0,2,4)); 
+	bgCol = mix(bgCol, float3(0.122, 0.125, 0.137) * 0.8, 0.5);
+	
+	float3 col = bgCol;
 	
 	if(dist > 0){
 		col = float3(0.122, 0.125, 0.137) * 0.8;
 	}
 	
-    return float4(col, 1.0);
+	col = mix(col, bgCol, hover_dist * hover_mul);
+	
+	return float4(col, 1.0);
 }
