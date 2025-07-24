@@ -24,14 +24,22 @@ public partial class CanvasWindowView : UserControl {
 
 	ThumbEvent currentThumbEvent = ThumbEvent.None;
 	
+	
+	// For reordering
+	private static int biggestZIndex = 0;
+	private static CanvasWindowViewModel? frontVM = null; 
+	
 	public CanvasWindowView() {
 		InitializeComponent();
 	}
 
 	private void Window_OnPointerPressed(object? sender, PointerPressedEventArgs e) {
-		e.Handled = true; // Stop propagation to the pan and zoom canvas
-		
 		BringToFront();
+		Console.WriteLine("Window Pressed BTF");
+	}
+	private void OutermostWindow_OnPointerPressed(object? sender, PointerPressedEventArgs e) {
+		e.Handled = true; // Stop propagation to the pan and zoom canvas
+		Console.WriteLine("OUTER WINDOW PRESS");
 	}
 
 	private void Thumb_OnDragStarted(object? sender, VectorEventArgs e) {
@@ -50,6 +58,8 @@ public partial class CanvasWindowView : UserControl {
 			"D"  => ThumbEvent.Drag,
 			_    => ThumbEvent.None
 		};
+		
+		BringToFront();
 	}
 	
 	private void Thumb_OnDrag(object? sender, VectorEventArgs e) {
@@ -118,20 +128,24 @@ public partial class CanvasWindowView : UserControl {
 
 	private void Thumb_OnDragCompleted(object? sender, VectorEventArgs e) {
 		currentThumbEvent = ThumbEvent.None;
-		BringToFront();
+		Console.WriteLine("Drag completed BTF");
 	}
 
 	private void BringToFront() {
-		if (MainWindow.Instance.DataContext is not MainWindowViewModel vm) return;
-		if (DataContext is not CanvasWindowViewModel thisVm) return;
+		if (DataContext is not CanvasWindowViewModel vm) return;
+
+		if (vm.ZIndex > biggestZIndex) return;
+		if (vm == frontVM) return;
 		
-		vm.BringWindowToFront(thisVm);
+		vm.ZIndex = ++biggestZIndex;
+		frontVM = vm;
+		Console.WriteLine($"Zindex is {vm.ZIndex}");
 	}
 
 	private void Window_OnKeyDown(object? sender, KeyEventArgs e) {
 		if (DataContext is not CanvasWindowViewModel vm) return;
-
-		if (e.Key == Key.OemTilde && e.KeyModifiers == KeyModifiers.Control) {
+		
+		if (e is { Key: Key.OemTilde, KeyModifiers: KeyModifiers.Control }) {
 			vm.ToggleQuickActions(true);
 			e.Handled = true;
 			return;

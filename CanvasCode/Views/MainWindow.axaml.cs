@@ -37,7 +37,8 @@ public partial class MainWindow : Window {
 		CanvasShader.SetUniform("posy", (float)MainCanvas.OffsetY);
 		CanvasShader.SetUniform("hover_posx", 0);
 		CanvasShader.SetUniform("hover_posy", 0);
-		CanvasShader.SetUniform("hover_mul", 0.0f);
+		CanvasShader.SetUniform("hover_start_time", 0);
+		CanvasShader.SetUniform("hover_end_time", 0);
 	}
 
 	protected override void OnResized(WindowResizedEventArgs e) {
@@ -77,17 +78,6 @@ public partial class MainWindow : Window {
 	
 	private bool isDraggingWindow = false;
 	private Point initialPos, initialClickPos;
-	private void DebugBorder_OnPointerPressed(object? sender, PointerPressedEventArgs e) {
-		if (!e.Properties.IsLeftButtonPressed || sender is not Border canvasWindow) return;
-		e.Handled = true; // Stop propagation so it doesnt drag the canvas as well
-		isDraggingWindow = true;
-		
-		
-		initialPos = new Point(Canvas.GetLeft(canvasWindow), Canvas.GetTop(canvasWindow));
-		initialClickPos = e.GetPosition(null);
-	}
-	
-	
 	static Control? prevDragControl = null;
 	
 	private void DragEnter(object? sender, DragEventArgs e) {
@@ -97,9 +87,7 @@ public partial class MainWindow : Window {
 			var pos = e.GetPosition(this);
 			CanvasShader.SetUniform("hover_posx", (float)pos.X - (float)MainCanvas.OffsetX);
 			CanvasShader.SetUniform("hover_posy", (float)pos.Y - (float)MainCanvas.OffsetY);
-			CanvasShader.SetUniform("hover_start_time", App.GetCurrentTime());
-			CanvasShader.SetUniform("hover_mul", 1.0f);
-			CanvasShader.AnimationFrameRate = 144;
+			StartShaderDragDropEffect();
 		}
 		
 		c = c.FindAncestorOfType<Border>(includeSelf: true) ?? c;
@@ -115,13 +103,13 @@ public partial class MainWindow : Window {
 		var pos = e.GetPosition(this);
 		CanvasShader.SetUniform("hover_posx", (float)pos.X - (float)MainCanvas.OffsetX);
 		CanvasShader.SetUniform("hover_posy", (float)pos.Y - (float)MainCanvas.OffsetY);
+		CanvasShader.SetUniform("hover_end_time", App.GetCurrentTime() + 10000f);
 	}
 	private void DragLeave(object? sender, DragEventArgs e) {
 		if (e.Source is not Control c) return;
 
 		if (c.DataContext is MainWindowViewModel) {
-			CanvasShader.SetUniform("hover_mul", 0.0f);
-			CanvasShader.AnimationFrameRate = 5;
+			StopShaderDragDropEffect();
 		}
 		
 		c = c.FindAncestorOfType<Border>(includeSelf: true) ?? c;
@@ -131,7 +119,7 @@ public partial class MainWindow : Window {
 	private void Drop(object? sender, DragEventArgs e) {
 		prevDragControl?.Classes.Remove("dragOver");
 		if (prevDragControl is { DataContext: MainWindowViewModel _ }) {
-			CanvasShader.SetUniform("hover_mul", 0.0f);
+			StopShaderDragDropEffect();
 		}
 		
 		var data = e.Data.Get(DataFormats.FileNames);
@@ -156,12 +144,47 @@ public partial class MainWindow : Window {
 		}
 	}
 
+	private bool shaderDragDropEffectStarted = false;
+	private void StartShaderDragDropEffect() {
+		shaderDragDropEffectStarted = true;
+		
+		CanvasShader.SetUniform("hover_start_time", App.GetCurrentTime());
+		CanvasShader.SetUniform("hover_end_time", App.GetCurrentTime() + 10000f);
+		CanvasShader.AnimationFrameRate = 144;
+	}
+
+	private void StopShaderDragDropEffect() {
+		shaderDragDropEffectStarted = false;
+		CanvasShader.SetUniform("hover_end_time", App.GetCurrentTime());
+		Task.Delay(1000).ContinueWith(_ => {
+			if (shaderDragDropEffectStarted) return;
+			CanvasShader.AnimationFrameRate = 5;
+		});	
+	}
+	
 	public void CloseWindow(CanvasWindowViewModel window) {
 		if (DataContext is not MainWindowViewModel vm) return;
+		
 		vm.CloseWindow(window);
 	}
 
-	private void Canvas_OnPointerPressed(object? sender, PointerPressedEventArgs e) {
-		Console.WriteLine("CANVAS POINTER PRESSED");
+	private void MinimizeButton_OnClick(object? sender, RoutedEventArgs e) {
+		WindowState = WindowState.Minimized;
+	}
+
+	private void TogleMaximized_OnClick(object? sender, RoutedEventArgs e) {
+		ToggleMaximize();
+	}
+
+	private void CloseWindow_OnClick(object? sender, RoutedEventArgs e) {
+		Close();
+	}
+	
+	private void ToggleMaximize() {
+		WindowState = WindowState ==  WindowState.Maximized ? WindowState.Normal : WindowState.Maximized;
+	}
+
+	private void TitleBarDrag_OnPointerPressed(object? sender, PointerPressedEventArgs e) {
+		this.BeginMoveDrag(e);
 	}
 }

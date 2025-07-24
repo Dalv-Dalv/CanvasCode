@@ -39,10 +39,15 @@ public partial class CommandPaletteViewModel : ViewModelBase {
 			CurrentMenu = command.SubMenu;
 			UpdateDisplayedCommands();
 			return false;
-		} else {
-			command.Execute();
-			return true;
 		}
+
+		command.Execute();
+		return true;
 	}
-	public bool SelectCommand(int index) => SelectCommand(DisplayedCommands[index]);
+
+	public bool SelectCommand(int index) {
+		if (index >= DisplayedCommands.Count) return true;
+		
+		return SelectCommand(DisplayedCommands[index]);
+	}
 }

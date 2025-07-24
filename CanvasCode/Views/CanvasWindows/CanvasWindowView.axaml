@@ -28,38 +28,57 @@
         </ControlTheme>
     </UserControl.Resources>
     
-    <Grid ColumnDefinitions="8, *, 8" RowDefinitions="8, *, 8">
+    <Grid ColumnDefinitions="8, *, 8" RowDefinitions="8, *, 8" PointerPressed="OutermostWindow_OnPointerPressed">
         <!--Actual window-->
         <Grid Grid.Row="1" Grid.Column="1" KeyDown="Window_OnKeyDown" Focusable="True" x:Name="ActualWindow" AttachedToVisualTree="ActualWindow_OnAttachedToVisualTree" PointerPressed="Window_OnPointerPressed">
             <Border ClipToBounds="True" CornerRadius="10">
-                <Grid RowDefinitions="Auto, Auto, *">
+                <Grid RowDefinitions="Auto, *">
                     <Border Grid.Row="0" Height="34" Background="{StaticResource PanelColor}" IsVisible="{Binding IsHeaderVisible}">
                         <Grid ColumnDefinitions="Auto, *, Auto">
-                            <ComboBox Grid.Column="0" CornerRadius="8" MinHeight="0" Margin="2 0" VerticalAlignment="Center"
+                            <ComboBox Grid.Column="0" CornerRadius="9 2 2 2" MinHeight="0" VerticalAlignment="Center"
                                       ItemsSource="{Binding AvailableTypes}"
+                                      Margin="2 1 2 0" Padding="10 7 7 7"
                                       SelectedItem="{Binding SelectedType, Mode=TwoWay}" DropDownClosed="ComboBox_OnDropDownClosed"/>
                             
                             <Thumb Grid.Column="1" x:Name="D" DragDelta="Thumb_OnDrag" DragStarted="Thumb_OnDragStarted" DragCompleted="Thumb_OnDragCompleted" Background="Transparent" Theme="{StaticResource ThumbTheme}"/>
                 
-                            <Button Grid.Column="2" Classes="panelButton" Command="{Binding CloseWindowCommand}">
-                                <Label Content="&#xE4F6;" Classes="icon" FontSize="20" Padding="0 0 8 0"/>
-                            </Button>
+                            <StackPanel Grid.Column="2" Orientation="Horizontal">
+                                <Button Classes="panelButton" Command="{Binding PinWindowCommand}"
+                                        Padding="7 0 0 0" VerticalAlignment="Stretch" Margin="0 0 0 -0.5"
+                                        CornerRadius="2" IsVisible="{Binding !IsPinned}">
+                                    <Label Content="&#xE3E2;" Classes="icon" FontSize="20" Padding="0 0 8 0"
+                                           VerticalAlignment="Center"/>
+                                </Button>
+                                <Button Classes="panelButton" Command="{Binding UnpinWindowCommand}"
+                                        Padding="7 0 0 0" VerticalAlignment="Stretch" Margin="0 0 0 -0.5"
+                                        CornerRadius="2" IsVisible="{Binding IsPinned}">
+                                    <Label Content="&#xE3E4;" Classes="iconFill" FontSize="20" Padding="0 0 8 0"
+                                           VerticalAlignment="Center"/>
+                                </Button>
+                                <Button Classes="panelButton" Command="{Binding CloseWindowCommand}"
+                                        Padding="7 0 0 0" VerticalAlignment="Stretch" Margin="0 0 0 -0.5"
+                                        CornerRadius="2">
+                                    <Label Content="&#xE4F6;" Classes="icon" FontSize="20" Padding="0 0 8 0"
+                                           VerticalAlignment="Center"/>
+                                </Button>
+                            </StackPanel>
                         </Grid>
                     </Border>
             
-                    <Border Grid.Row="2" Background="{StaticResource PrimaryBackground}" Padding="5">
+                    <Border Grid.Row="1" Background="{StaticResource PrimaryTransparentBackground}" Padding="5">
                         <ContentControl Content="{Binding CurrentContent}"/>
                     </Border>
                 </Grid>
             </Border>
             
             <Border BorderBrush="{StaticResource PanelHighlight}" CornerRadius="10"
-                    BorderThickness="1"/>
+                    BorderThickness="1"
+                    BoxShadow="0 3 20 3 #4F0F0F10"/>
             
             <Grid ColumnDefinitions="*, Auto, *" RowDefinitions="*, Auto, *" IsVisible="{Binding IsQuickActionsOpen}">
                 <Border Grid.Column="1" Grid.Row="1" Background="{StaticResource PanelColor}" Padding="10"
                         CornerRadius="10" BorderBrush="{StaticResource PanelHighlight}" BorderThickness="2"
-                        BoxShadow="0 3 50 10 #5F000003">
+                        BoxShadow="0 3 10 3 #4F0F0F10">
                     <StackPanel DataContext="{Binding QuickActions}">
                         <Label Content="{Binding CurrentTitle}" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0 -5 0 4"/>
                         <ItemsControl ItemsSource="{Binding DisplayedCommands}">

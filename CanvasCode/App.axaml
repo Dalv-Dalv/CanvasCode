@@ -42,11 +42,13 @@
         <FontFamily x:Key="PhosphorRegular">Assets/Fonts/Phosphor.ttf#Phosphor</FontFamily>
         
         <SolidColorBrush x:Key="PrimaryBackground">#1E1F22</SolidColorBrush>
+        <SolidColorBrush x:Key="PrimaryTransparentBackground">#CF1E1F22</SolidColorBrush>
         <SolidColorBrush x:Key="PrimarySeparator">#7F3C3F45</SolidColorBrush>
         
         <SolidColorBrush x:Key="PrimaryHover">#7F3C3F45</SolidColorBrush>
         
         <SolidColorBrush x:Key="PanelColor">#2B2D30</SolidColorBrush>
+        <SolidColorBrush x:Key="TransparentPanelColor">#7F2B2D30</SolidColorBrush>
         <SolidColorBrush x:Key="PanelHighlight">#43454A</SolidColorBrush>
         
         <SolidColorBrush x:Key="PrimaryShadow">#10f0f8ff</SolidColorBrush> <!-- These dont work in boxshadow, idk -->

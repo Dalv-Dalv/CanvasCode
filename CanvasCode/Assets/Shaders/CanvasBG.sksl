@@ -3,6 +3,7 @@ uniform float iTime;
 uniform float posx, posy;
 uniform float hover_posx, hover_posy, hover_mul;
 uniform float hover_start_time;
+uniform float hover_end_time;
 
 float step(float edge, float x){
 	return x < edge ? 0.0 : 1.0;
@@ -13,31 +14,50 @@ float smoothstep(float edge0, float edge1, float x){
     return t * t * (3.0 - 2.0 * t);
 }
 
+float calculateHoverEffectIntensity(float start_duration, float end_duration) {
+	float forward_dt = clamp((iTime - hover_start_time) / start_duration, 0.0, 1.0);
+    float dt_at_end = clamp((hover_end_time - hover_start_time) / start_duration, 0.0, 1.0);
+    float backward_dt = max(0.0, dt_at_end - ((iTime - hover_end_time) / end_duration));
+    float is_after_end = step(hover_end_time, iTime);
+    
+    return mix(forward_dt, backward_dt, is_after_end);
+}
+
 float4 main(float2 fragCoord) {
 	float2 coord = fragCoord + float2(-posx, -posy);
-    float2 uv = fract(coord / 100.0);
+    float2 uv = coord / 100.0;
     float2 screenUV = fragCoord / iResolution;
-    float2 hover_uv = (coord - float2(hover_posx, hover_posy)) / 100.0;
-	uv = uv * 2 - float2(1.0);
-	uv = abs(uv); 
+    float2 hover_uv = (coord - float2(hover_posx, hover_posy)) / 100.0; 
 	
-	float dist = length(uv) - 0.03;
 	float hover_dist = length(hover_uv);
-	hover_dist = 1.0 - clamp(0.0, 1.0, (hover_dist - clamp(0.0, 0.5, iTime - hover_start_time) * 1.0));
-	hover_dist *= cos(hover_dist * 2.0 - iTime * 8.0 - hover_start_time) * 0.5 + 0.7;
-	hover_dist = clamp(0.0, 1.0, hover_dist);
+	float dt = iTime - hover_start_time;
+	float smoothDT = calculateHoverEffectIntensity(0.7, 0.3);
+	smoothDT = smoothDT * smoothDT * smoothDT * (smoothDT * (smoothDT * 6.0 - 15.0) + 10.0); 
+	float ripple_wave = abs(cos(hover_dist * 2.0 + dt * 4.0));
+	float2 ripple_dir = normalize(hover_uv);
 	
+	float2 ripple_disp = (ripple_dir + 0.1 * ripple_dir * ripple_wave) * (1.0 - clamp(0.0, 1.0, (hover_dist * 0.1 / clamp(smoothDT, 0.0, 1.0))));
+	
+	hover_dist = 1.0 - clamp(0.0, 1.0, (hover_dist * 0.6 / clamp(smoothDT, 0.0, 1.0)));
+	hover_dist = hover_dist * hover_dist * hover_dist * (hover_dist * (hover_dist * 6.0 - 15.0) + 10.0); 
+	hover_dist *= cos(hover_dist * 3.0 - iTime * 8.0 - hover_start_time) * 0.5 + 0.7;
+	hover_dist = clamp(0.0, 1.0, hover_dist);
 	
 	float3 bgCol = 0.5 + 0.5*cos(iTime + float3(screenUV,0) + float3(0,2,4)); 
 	bgCol = mix(bgCol, float3(0.122, 0.125, 0.137) * 0.8, 0.5);
 	
 	float3 col = bgCol;
 	
+	uv += ripple_disp * 0.2;
+	uv = fract(uv);
+	uv = uv * 2 - float2(1.0);
+	uv = abs(uv);
+	float dist = length(uv) - 0.03;
 	if(dist > 0){
 		col = float3(0.122, 0.125, 0.137) * 0.8;
 	}
 	
-	col = mix(col, bgCol, hover_dist * hover_mul);
+	col = mix(col, bgCol, 0.7 * hover_dist * clamp(smoothDT * 1000.0, 0.0, 1.0));
 	
 	return float4(col, 1.0);
 }

@@ -24,6 +24,7 @@ public partial class MainWindowViewModel : ViewModelBase, IRecipient<EnterFullsc
 	private ICanvasWindowContentViewModel? fullscreenContent;
 	
 	public ObservableCollection<CanvasWindowViewModel> Windows { get; } = [];
+	public ObservableCollection<CanvasWindowViewModel> PinnedWindows { get; } = [];
 
 	private Point lastRightClickPos;
 	
@@ -56,18 +57,19 @@ public partial class MainWindowViewModel : ViewModelBase, IRecipient<EnterFullsc
 		Windows.Add(window);
 	}
 
-	public void BringWindowToFront(CanvasWindowViewModel? window) {
-		if (window == null) return;
-        
-		var index = Windows.IndexOf(window);
+	public void PinWindow(CanvasWindowViewModel window) {
+		Windows.Remove(window);
+		PinnedWindows.Add(window);
+	}
 
-		if (index < 0 || index >= Windows.Count - 1) return;
-		
-		Windows.Move(index, Windows.Count - 1);
+	public void UnpinWindow(CanvasWindowViewModel window) {
+		PinnedWindows.Remove(window);
+		Windows.Add(window);
 	}
 
 	public void CloseWindow(CanvasWindowViewModel window) {
-		Windows.Remove(window);
+		if (window.IsPinned) PinnedWindows.Remove(window);
+		else Windows.Remove(window);
 	}
 	
 	public void Receive(EnterFullscreenMessage message) {

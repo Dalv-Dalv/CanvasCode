@@ -17,7 +17,10 @@
         x:Class="CanvasCode.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Icon="/Assets/avalonia-logo.ico"
-        Title="CanvasCode">
+        Title="CanvasCode"
+        SystemDecorations="None"
+        ExtendClientAreaChromeHints="NoChrome"
+        ExtendClientAreaToDecorationsHint="True">
 
     <Window.Resources>
         <converters:FileModelToIconConverter x:Key="FileToIconConverter"/>
@@ -41,7 +44,7 @@
                 <ItemsControl x:Name="WindowsItemsControl" ItemsSource="{Binding Windows}" ClipToBounds="False">
                     <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate>
-                            <Canvas PointerPressed="Canvas_OnPointerPressed"/>
+                            <Canvas/>
                         </ItemsPanelTemplate>
                     </ItemsControl.ItemsPanel>
                 
@@ -56,17 +59,78 @@
                         <ControlTheme TargetType="ContentPresenter" x:DataType="cwvm:CanvasWindowViewModel">
                             <Setter Property="Canvas.Left" Value="{Binding Position.X}"/>
                             <Setter Property="Canvas.Top" Value="{Binding Position.Y}"/>
+                            <Setter Property="ZIndex" Value="{Binding ZIndex}"/>
                         </ControlTheme>
                     </ItemsControl.ItemContainerTheme>
                 </ItemsControl>
                 
                 <paz:ZoomBorder.ContextMenu>
-                    <ContextMenu>
-                        <MenuItem Header="Open new window" Command="{Binding OpenNewWindowCommand}"/>
+                    <ContextMenu HorizontalOffset="-80" VerticalOffset="-20" Padding="0" MinHeight="0" MinWidth="0"
+                                 Background="{StaticResource PrimaryTransparentBackground}"
+                                 Foreground="{StaticResource PrimaryText}"
+                                 BorderBrush="{StaticResource PanelHighlight}"
+                                 BorderThickness="2">
+                        <MenuItem Foreground="{StaticResource PrimaryText}" Header="Open new window" Padding="30 15 10 15" Margin="-10" Command="{Binding OpenNewWindowCommand}"/>
                     </ContextMenu>
                 </paz:ZoomBorder.ContextMenu>
             </paz:ZoomBorder>
         </Grid>
+        
+        <ItemsControl x:Name="PinnedWindowsItemsControl" ItemsSource="{Binding PinnedWindows}" ClipToBounds="False">
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <Canvas/>
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+                
+            <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                    <cwv:CanvasWindowView Width="{Binding Size.Width}" MinWidth="300" MinHeight="300"
+                                          Height="{Binding Size.Height}"/>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+                    
+            <ItemsControl.ItemContainerTheme>
+                <ControlTheme TargetType="ContentPresenter" x:DataType="cwvm:CanvasWindowViewModel">
+                    <Setter Property="Canvas.Left" Value="{Binding Position.X}"/>
+                    <Setter Property="Canvas.Top" Value="{Binding Position.Y}"/>
+                    <Setter Property="ZIndex" Value="{Binding ZIndex}"/>
+                </ControlTheme>
+            </ItemsControl.ItemContainerTheme>
+        </ItemsControl>
+        
+        <Panel Height="32" VerticalAlignment="Top" Classes="titleBar">
+            <Grid ColumnDefinitions="*, Auto">
+                <Border Grid.Column="0" Background="Transparent" PointerPressed="TitleBarDrag_OnPointerPressed" DoubleTapped="TogleMaximized_OnClick"/>
+                
+                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                    <Button Classes="panelButton" CornerRadius="2" VerticalAlignment="Stretch"
+                            Padding="8 0" Margin="0" Click="MinimizeButton_OnClick">
+                        <Label Content="&#xE32A;" Classes="icon" FontSize="15" Padding="0" VerticalAlignment="Center"/>
+                    </Button>
+                    
+                    <Button Classes="panelButton" CornerRadius="2" VerticalAlignment="Stretch"
+                            Padding="8 0" Margin="0" Click="TogleMaximized_OnClick">
+                        <Label Content="&#xE45E;" Classes="icon" FontSize="15" Padding="0" VerticalAlignment="Center"/>
+                    </Button>
+                    
+                    <Button Classes="panelButton" CornerRadius="2" VerticalAlignment="Stretch"
+                            Padding="8 0" Margin="0" Click="CloseWindow_OnClick">
+                        <Label Content="&#xE4F6;" Classes="icon" FontSize="15" Padding="0" VerticalAlignment="Center"/>
+                    </Button>
+                </StackPanel>
+            </Grid>
+            
+            <Panel.Styles>
+                <Style Selector="Panel.titleBar">
+                    <Setter Property="Background" Value="{StaticResource PrimaryTransparentBackground}"/>
+                    <Setter Property="Opacity" Value="0"/>
+                </Style>
+                <Style Selector="Panel.titleBar:pointerover">
+                    <Setter Property="Opacity" Value="1"/>
+                </Style>
+            </Panel.Styles>
+        </Panel>
         
         <ContentControl Content="{Binding FullscreenContent}" IsVisible="{Binding IsFullscreen}"/>
     </Grid>

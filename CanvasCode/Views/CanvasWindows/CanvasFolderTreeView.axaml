@@ -86,7 +86,8 @@
                     </Setter>
                 </Style>
                 <Style Selector="Border.fileBorder.dragOver" x:DataType="vm:FileNodeViewModel">
-                    <Setter Property="BoxShadow" Value="inset 0 0 0 2 SkyBlue" />
+                    <Setter Property="BoxShadow" Value="inset 0 0 0 1 #CFFF0000"/>
+                    <Setter Property="CornerRadius" Value="4"/>
                 </Style>
             </TreeView.Styles>
         </TreeView>

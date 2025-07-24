@@ -21,7 +21,10 @@ public enum CanvasWindowType {
 public partial class CanvasWindowViewModel : ViewModelBase {
 	[ObservableProperty] private Point position;
 	[ObservableProperty] private Size size;
+	[ObservableProperty] private int zIndex = 0;
 	[ObservableProperty] private string title;
+	[ObservableProperty] private bool isPinned;
+	private Point beforePinPosition;
 
 	[ObservableProperty] private CanvasWindowType selectedType;
 	public IEnumerable<CanvasWindowType> AvailableTypes { get; } = Enum.GetValues<CanvasWindowType>();
@@ -122,6 +125,8 @@ public partial class CanvasWindowViewModel : ViewModelBase {
 		
 		QuickActions = new  CommandPaletteViewModel(rootMenu);
 	}
+
+	
 	
 	// Actions
 	public void ToggleHeader() => IsHeaderVisible = !IsHeaderVisible;
@@ -143,5 +148,27 @@ public partial class CanvasWindowViewModel : ViewModelBase {
 	[RelayCommand]
 	private void CloseWindow(object? parameter) {
 		CloseWindow();
+	}
+
+
+	[RelayCommand]
+	private void PinWindow(object? parameter) {
+		if (MainWindow.Instance.DataContext is not MainWindowViewModel vm) return;
+		
+		IsPinned = true;
+		beforePinPosition = Position;
+		Position = new Point(0, 0);
+		
+		vm.PinWindow(this);
+	}
+
+	[RelayCommand]
+	private void UnpinWindow(object? parameter) {
+		if (MainWindow.Instance.DataContext is not MainWindowViewModel vm) return;
+		
+		IsPinned = false;
+		Position = beforePinPosition;
+		
+		vm.UnpinWindow(this);
 	}
 }
