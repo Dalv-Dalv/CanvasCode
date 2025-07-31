@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using AvaloniaEdit.Document;
 using CanvasCode.Models.CommandPalettes;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -6,8 +7,19 @@ using CommunityToolkit.Mvvm.Input;
 namespace CanvasCode.ViewModels.CanvasWindows;
 
 public partial class CanvasCodeEditorViewModel : ViewModelBase, ICanvasWindowContentViewModel {
-	[ObservableProperty] private string codeText = "";
-	[ObservableProperty] private string fileName = "untitled";
+	public CanvasWindowViewModel ParentWindow { get; }
+
+	[ObservableProperty] private TextDocument currentDocument;
+	
+	public CanvasCodeEditorViewModel() { //FOR DESIGN VIEW ONLY
+		ParentWindow = null!;
+		CurrentDocument = new TextDocument("public string GetTitle() {\n\treturn  \"Code Editor\";\n}\n\npublic void SetData(object data) {\n\t//TODO WIP\n}\n\npublic List<CommandPaletteItem> GetQuickActions() {\n\treturn [\n\t\tnew CommandPaletteItem(\"Open File\", command: new RelayCommand(OpenFile))\n\t];\n}");
+	}
+	
+	public CanvasCodeEditorViewModel(CanvasWindowViewModel parentWindow) {
+		ParentWindow = parentWindow;
+		CurrentDocument = new TextDocument("public string GetTitle() {\n\treturn  \"Code Editor\";\n}\n\npublic void SetData(object data) {\n\t//TODO WIP\n}\n\npublic List<CommandPaletteItem> GetQuickActions() {\n\treturn [\n\t\tnew CommandPaletteItem(\"Open File\", command: new RelayCommand(OpenFile))\n\t];\n}");
+	}
 	
 	public string GetTitle() {
 		return  "Code Editor";

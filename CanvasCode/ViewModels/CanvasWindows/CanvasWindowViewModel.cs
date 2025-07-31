@@ -13,23 +13,18 @@ using CommunityToolkit.Mvvm.Messaging;
 
 namespace CanvasCode.ViewModels.CanvasWindows;
 
-public enum CanvasWindowType {
-	CodeEditor, ShaderPreview, FolderTree
-}
-
-
 public partial class CanvasWindowViewModel : ViewModelBase {
 	[ObservableProperty] private Point position;
 	[ObservableProperty] private Size size;
 	[ObservableProperty] private int zIndex = 0;
-	[ObservableProperty] private string title;
+	[ObservableProperty] private string title = null!;
 	[ObservableProperty] private bool isPinned;
 	private Point beforePinPosition;
 
 	[ObservableProperty] private CanvasWindowType selectedType;
 	public IEnumerable<CanvasWindowType> AvailableTypes { get; } = Enum.GetValues<CanvasWindowType>();
 	
-	[ObservableProperty] private ICanvasWindowContentViewModel currentContent;
+	[ObservableProperty] private ICanvasWindowContentViewModel currentContent = null!;
 	private Dictionary<CanvasWindowType, ICanvasWindowContentViewModel> contentStates;
 
 	[ObservableProperty] private bool isHeaderVisible = true;
@@ -42,9 +37,9 @@ public partial class CanvasWindowViewModel : ViewModelBase {
 	public CanvasWindowViewModel() { // FOR DESIGN VIEW ONLY
 		//TODO Optimize: Dont store the entire view model, store only the bare minimum for reinitializing the viewModels upon switching
 		contentStates = new Dictionary<CanvasWindowType, ICanvasWindowContentViewModel> {
-			{CanvasWindowType.CodeEditor, new CanvasCodeEditorViewModel()},
-			{CanvasWindowType.ShaderPreview, new CanvasShaderPreviewViewModel()},
-			{CanvasWindowType.FolderTree, new CanvasFolderTreeViewModel()}
+			{CanvasWindowType.CodeEditor, new CanvasCodeEditorViewModel(this)},
+			{CanvasWindowType.ShaderPreview, new CanvasShaderPreviewViewModel(this)},
+			{CanvasWindowType.FolderTree, new CanvasFolderTreeViewModel(this)}
 		};
 
 		SelectedType = CanvasWindowType.FolderTree;
@@ -53,9 +48,9 @@ public partial class CanvasWindowViewModel : ViewModelBase {
 	public CanvasWindowViewModel(CanvasWindowType type = CanvasWindowType.CodeEditor) {
 		//TODO Optimize: Dont store the entire view model, store only the bare minimum for reinitializing the viewModels upon switching
 		contentStates = new Dictionary<CanvasWindowType, ICanvasWindowContentViewModel> {
-			{CanvasWindowType.CodeEditor, new CanvasCodeEditorViewModel()},
-			{CanvasWindowType.ShaderPreview, new CanvasShaderPreviewViewModel()},
-			{CanvasWindowType.FolderTree, new CanvasFolderTreeViewModel()}
+			{CanvasWindowType.CodeEditor, new CanvasCodeEditorViewModel(this)},
+			{CanvasWindowType.ShaderPreview, new CanvasShaderPreviewViewModel(this)},
+			{CanvasWindowType.FolderTree, new CanvasFolderTreeViewModel(this)}
 		};
 
 		SelectedType = type;
@@ -64,9 +59,9 @@ public partial class CanvasWindowViewModel : ViewModelBase {
 	public CanvasWindowViewModel(object data, CanvasWindowType type) {
 		//TODO Optimize: Dont store the entire view model, store only the bare minimum for reinitializing the viewModels upon switching
 		contentStates = new Dictionary<CanvasWindowType, ICanvasWindowContentViewModel> {
-			{CanvasWindowType.CodeEditor, new CanvasCodeEditorViewModel()},
-			{CanvasWindowType.ShaderPreview, new CanvasShaderPreviewViewModel()},
-			{CanvasWindowType.FolderTree, new CanvasFolderTreeViewModel()}
+			{CanvasWindowType.CodeEditor, new CanvasCodeEditorViewModel(this)},
+			{CanvasWindowType.ShaderPreview, new CanvasShaderPreviewViewModel(this)},
+			{CanvasWindowType.FolderTree, new CanvasFolderTreeViewModel(this)}
 		};
 
 		contentStates[type].SetData(data);

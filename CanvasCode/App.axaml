@@ -27,7 +27,8 @@
   
     <Application.Styles>
         <FluentTheme/>
-        <StyleInclude Source="Styles/AppDefaultStyles.axaml"></StyleInclude>
+        <StyleInclude Source="avares://AvaloniaEdit/Themes/Fluent/AvaloniaEdit.xaml"/>
+        <StyleInclude Source="Styles/AppDefaultStyles.axaml"/>
     </Application.Styles>
              
     <Application.Resources>
@@ -35,11 +36,15 @@
             <ResourceDictionary.MergedDictionaries>
                 <MergeResourceInclude Source="avares://CanvasCode/Styles/SolutionExplorerStyles.axaml"/>
                 <MergeResourceInclude Source="/Controls/ComboBox.axaml"/>
+                <MergeResourceInclude Source="/Controls/ScrollViewer.axaml"/>
+                <MergeResourceInclude Source="/Controls/TreeView.axaml"/>
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
         
         <FontFamily x:Key="PhosphorFill">Assets/Fonts/Phosphor-Fill.ttf#Phosphor-Fill</FontFamily>
         <FontFamily x:Key="PhosphorRegular">Assets/Fonts/Phosphor.ttf#Phosphor</FontFamily>
+        
+        <SolidColorBrush x:Key="PrimaryAccentColor">#E0634A</SolidColorBrush>
         
         <SolidColorBrush x:Key="PrimaryBackground">#1E1F22</SolidColorBrush>
         <SolidColorBrush x:Key="PrimaryTransparentBackground">#CF1E1F22</SolidColorBrush>
@@ -55,6 +60,7 @@
         <SolidColorBrush x:Key="SecondaryShadow">#30f0f8ff</SolidColorBrush> <!-- These dont work in boxshadow, idk -->
         
         <SolidColorBrush x:Key="PrimaryText">#DFE1E5</SolidColorBrush>
+        <SolidColorBrush x:Key="ErrorText">#FF6165</SolidColorBrush>
         <SolidColorBrush x:Key="SecondaryText">#6F737A</SolidColorBrush>
     </Application.Resources>
     

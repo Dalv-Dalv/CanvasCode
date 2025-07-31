@@ -2,20 +2,19 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:ae="clr-namespace:AvaloniaEdit;assembly=AvaloniaEdit"
              xmlns:vm="clr-namespace:CanvasCode.ViewModels.CanvasWindows"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="CanvasCode.Views.CanvasWindows.CanvasCodeEditorView"
              x:DataType="vm:CanvasCodeEditorViewModel">
     
-    <Design.DataContext>
+    <Design.DataContext> 
         <vm:CanvasCodeEditorViewModel/>
     </Design.DataContext>
     
-    <Grid RowDefinitions="Auto, *">
-        <Label Grid.Row="0">THIS IS THE CODE EDITOR</Label>
-        <TextBox Grid.Row="1" Text="{Binding CodeText}"
-                 AcceptsReturn="True"
-                 TextWrapping="NoWrap"/>
+    <Grid>  
+        <ae:TextEditor x:Name="Editor" FontFamily="Cascadia Mono, Consolas, monospace" Foreground="{StaticResource PrimaryText}"
+                       FontSize="13" ShowLineNumbers="True" Document="{Binding CurrentDocument}"/>
     </Grid>
     
 </UserControl>

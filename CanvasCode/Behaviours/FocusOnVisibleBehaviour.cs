@@ -19,7 +19,7 @@ public class FocusOnVisibleBehaviour : Behavior<Control> {
 
 	protected override void OnDetaching() {
 		base.OnDetaching();
-		disposable.Dispose();
+		disposable?.Dispose();
 	}
 
 	private void OnIsVisibleChanged(bool isVisible) {

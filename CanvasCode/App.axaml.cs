@@ -18,6 +18,7 @@ namespace CanvasCode;
 public class App : Application {
 	
 	//TODO: Convert this to DI
+	public static DialogService DialogService = new();
 	public static FolderDataService FolderService { get; private set; } = null!;
 	private static CacheEvictionService cacheEvictionService = null!;
 	public static IMessenger Messenger { get; set; } = null!;
@@ -47,7 +48,7 @@ public class App : Application {
 				DataContext = new MainWindowViewModel()
 			};
 
-			desktop.MainWindow.WindowState = WindowState.Maximized;
+			// desktop.MainWindow.WindowState = WindowState.Maximized;
 
 			WindowingService = new WindowsWindowingService(desktop.MainWindow);
 			

@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Avalonia;
@@ -9,14 +10,21 @@ using Avalonia.Controls.PanAndZoom;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
+using Avalonia.Platform.Storage;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
+using CanvasCode.Others;
 using CanvasCode.ViewModels;
 using CanvasCode.ViewModels.CanvasWindows;
+using CanvasCode.Views.CanvasWindows;
+using CommunityToolkit.Mvvm.Messaging;
 
 namespace CanvasCode.Views;
 
 public partial class MainWindow : Window {
+	private Timer? titleBarTimer;
+	private bool isCursorOverTitleBar = false;
+	
 	public static MainWindow Instance { get; private set; }
 	
 	public MainWindow() {
@@ -24,9 +32,7 @@ public partial class MainWindow : Window {
 
 		Instance = this;
 		
-		// var timer = new Timer(_ => {
-		// 	Console.WriteLine($"Currently focused: {FocusManager?.GetFocusedElement()}");
-		// }, null, TimeSpan.Zero, TimeSpan.FromSeconds(1));
+		titleBarTimer = new Timer(ShowTitleBar, null, Timeout.Infinite, Timeout.Infinite);
 		
 		AddHandler(DragDrop.DragOverEvent, DragOver);
 		AddHandler(DragDrop.DropEvent, Drop);
@@ -76,13 +82,18 @@ public partial class MainWindow : Window {
 
 	
 	
-	private bool isDraggingWindow = false;
-	private Point initialPos, initialClickPos;
 	static Control? prevDragControl = null;
 	
 	private void DragEnter(object? sender, DragEventArgs e) {
 		if (e.Source is not Control c) return;
 
+		if (c.DataContext is CanvasFolderTreeViewModel ftvm) {
+			ftvm.IsDraggingOverRoot = true;
+		}else if (c.DataContext is FileNodeViewModel fnvm) {
+			if (fnvm.Model.IsDirectory) fnvm.IsDropTarget = true;
+			else if (fnvm.Parent != null) fnvm.Parent.IsDropTarget = true;
+		}
+		
 		if (c.DataContext is MainWindowViewModel) {
 			var pos = e.GetPosition(this);
 			CanvasShader.SetUniform("hover_posx", (float)pos.X - (float)MainCanvas.OffsetX);
@@ -96,7 +107,7 @@ public partial class MainWindow : Window {
 	}
 	private void DragOver(object? sender, DragEventArgs e) {
 		if (e.Source is not Control c) return;
-
+		
 		// If dragging over shader
 		if (c.DataContext is not MainWindowViewModel _) return; 
 		
@@ -108,6 +119,13 @@ public partial class MainWindow : Window {
 	private void DragLeave(object? sender, DragEventArgs e) {
 		if (e.Source is not Control c) return;
 
+		if (prevDragControl.DataContext is CanvasFolderTreeViewModel ftvm) {
+			ftvm.IsDraggingOverRoot = false;
+		}else if (prevDragControl.DataContext is FileNodeViewModel fnvm) {
+			if (fnvm.Model.IsDirectory) fnvm.IsDropTarget = false;
+			else if (fnvm.Parent != null) fnvm.Parent.IsDropTarget = false;
+		}
+		
 		if (c.DataContext is MainWindowViewModel) {
 			StopShaderDragDropEffect();
 		}
@@ -121,17 +139,53 @@ public partial class MainWindow : Window {
 		if (prevDragControl is { DataContext: MainWindowViewModel _ }) {
 			StopShaderDragDropEffect();
 		}
-		
-		var data = e.Data.Get(DataFormats.FileNames);
-		if (data is not string[] files) return;
+
+		if (prevDragControl?.DataContext is FileNodeViewModel fnvm) {
+			if (fnvm.Model.IsDirectory) fnvm.IsDropTarget = false;
+			else if(fnvm.Parent != null) fnvm.Parent.IsDropTarget = false;
+		}
+
+		string[]? files = e.Data.Get("Files") as string[];
+		if (files == null) {
+			var data = e.Data.GetFiles();
+			if (data is null) return;
+
+			files = data
+			        .Select(item => item.TryGetLocalPath())
+			        .Where(path => path is not null)
+			        .ToArray()!;	
+		}
+
+		if (files.Length <= 0) return;
 		
 		if (e.Source is not Control c) return;
 		
 		switch (c.DataContext) {
 			case FileNodeViewModel fvm:
-				if (!fvm.Model.IsDirectory) break;
+				var parentWindowView = c.FindAncestorOfType<CanvasWindowView>(includeSelf: true);
+
+				if (parentWindowView?.DataContext is CanvasWindowViewModel parentWindowVM) {
+					App.Messenger.Send(new RequestFocusMessage(parentWindowVM));
+				}
 				
-				App.FolderService.Move(files[0], fvm.Model.FullPath);
+				if (fvm.Model.IsDirectory) {
+					App.FolderService.Move(files[0], fvm.Model.FullPath);
+				} else {
+					var parentPath = Path.GetDirectoryName(fvm.Model.FullPath);
+					if (parentPath == null) return;
+					App.FolderService.Move(files[0], parentPath);
+				}
+				
+				break;
+			
+			case CanvasFolderTreeViewModel ftvm:
+				ftvm.IsDraggingOverRoot = false;
+				
+				if (ftvm.OpenFolderRoots.Count <= 0) return;
+
+				App.Messenger.Send(new RequestFocusMessage(ftvm.ParentWindow));
+				
+				App.FolderService.Move(files[0], ftvm.OpenFolderRoots[0].Model.FullPath);
 				break;
 			
 			case MainWindowViewModel mvm: {
@@ -158,7 +212,9 @@ public partial class MainWindow : Window {
 		CanvasShader.SetUniform("hover_end_time", App.GetCurrentTime());
 		Task.Delay(1000).ContinueWith(_ => {
 			if (shaderDragDropEffectStarted) return;
-			CanvasShader.AnimationFrameRate = 5;
+			Dispatcher.UIThread.Post(() => {
+				CanvasShader.AnimationFrameRate = 5;
+			});
 		});	
 	}
 	
@@ -186,5 +242,33 @@ public partial class MainWindow : Window {
 
 	private void TitleBarDrag_OnPointerPressed(object? sender, PointerPressedEventArgs e) {
 		this.BeginMoveDrag(e);
+	}
+	
+	private void Window_OnPointerMoved(object? sender, PointerEventArgs e) {
+		var pos = e.GetPosition(this);
+		const double titlebarHoverHeight = 20.0;
+		const double titlebarExitHeight = 32.0;
+
+		if (pos.Y < titlebarHoverHeight && !isCursorOverTitleBar) {
+			isCursorOverTitleBar = true;
+			titleBarTimer?.Change(400, Timeout.Infinite);
+		}else if (pos.Y > titlebarExitHeight && isCursorOverTitleBar) {
+			isCursorOverTitleBar = false;
+			titleBarTimer?.Change(Timeout.Infinite, Timeout.Infinite);
+		
+			if (DataContext is not MainWindowViewModel vm) return;
+
+			vm.IsTitleBarVisible = false;			
+		}
+	}
+	
+	private void ShowTitleBar(object? state) {
+		if (!isCursorOverTitleBar) return;
+		
+		Dispatcher.UIThread.Post(() => {
+			if (DataContext is not  MainWindowViewModel vm) return;
+			
+			vm.IsTitleBarVisible = true;
+		});
 	}
 }

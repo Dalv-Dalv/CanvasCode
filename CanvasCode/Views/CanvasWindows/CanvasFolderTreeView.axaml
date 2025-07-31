@@ -19,20 +19,24 @@
     <UserControl.Resources>
         <converters:FileModelToIconConverter x:Key="FileToIconConverter"/>
         <converters:FileModelToColorConverter x:Key="FileToColorConverter"/>
+        <converters:PathStatusToErrorMessageConverter x:Key="ErrorMessageConverter"/>
     </UserControl.Resources>
     
     <Grid>
         <Border IsVisible="{Binding IsEmpty}">
-            <Button Command="{Binding OpenFolderCommand}" VerticalAlignment="Center" HorizontalAlignment="Center" Padding="30 10">
-                Select Folder
-            </Button>
+            <StackPanel VerticalAlignment="Center" Spacing="30">
+                <TextBlock HorizontalAlignment="Center" Foreground="{StaticResource SecondaryText}" TextWrapping="Wrap" TextAlignment="Center"
+                           Text="{Binding PrevPath, Converter={StaticResource ErrorMessageConverter}}"/>
+                <Button Command="{Binding OpenFolderCommand}" VerticalAlignment="Center" HorizontalAlignment="Center" Padding="30 10">
+                    Select Folder
+                </Button>
+            </StackPanel>
         </Border>
         <TreeView VerticalAlignment="Stretch" ItemsSource="{Binding OpenFolderRoots}" SelectionMode="Multiple"
                   KeyDown="TreeView_OnKeyDown" IsVisible="{Binding !IsEmpty}">
             <TreeView.ItemTemplate>
                 <TreeDataTemplate x:DataType="vm:FileNodeViewModel" ItemsSource="{Binding Children}">
-                    <Border Margin="0" Padding="0" Background="Transparent" PointerPressed="OnPointerPressed" PointerMoved="OnPointerMoved" Classes="fileBorder">
-                        <Grid ColumnDefinitions="Auto, *" ColumnSpacing="4">
+                    <Grid ColumnDefinitions="Auto, *" ColumnSpacing="4" PointerPressed="OnPointerPressed" PointerReleased="OnPointerReleased" PointerMoved="OnPointerMoved" Background="Transparent">
                             <Label Grid.Column="0" FontFamily="{StaticResource PhosphorRegular}" VerticalAlignment="Center" FontSize="15">
                                 <Label.Foreground>
                                     <MultiBinding Converter="{StaticResource FileToColorConverter}">
@@ -45,26 +49,9 @@
                                     </MultiBinding>
                                 </Label.Content>
                             </Label>
-                            <TextBlock Grid.Column="1" Text="{Binding Model.Name}"
-                                       VerticalAlignment="Center" FontSize="15"
-                                       IsVisible="{Binding !IsRenaming}" />
-                            <TextBox Grid.Column="1" Text="{Binding Model.Name, Mode=OneWay}"
-                                     VerticalAlignment="Center" FontSize="15"
-                                     IsVisible="{Binding IsRenaming}"
-                                     x:Name="RenameBox" MinHeight="0" Padding="0"
-                                     KeyDown="RenameTextBox_OnKeyDown"
-                                     TextInput="RenameBox_OnTextInput">
-
-                                <i:Interaction.Behaviors>
-                                    <localBehaviours:FocusOnVisibleBehaviour />
-                                    <behaviours:EventTriggerBehavior EventName="LostFocus">
-                                        <behaviours:InvokeCommandAction Command="{Binding CommitRenameCommand}"
-                                                                        CommandParameter="{Binding #RenameBox.Text}" />
-                                    </behaviours:EventTriggerBehavior>
-                                </i:Interaction.Behaviors>
-                            </TextBox>
+                        
+                            <TextBlock Grid.Column="1" Text="{Binding Model.Name}" VerticalAlignment="Center" FontSize="15"/>
                         </Grid>
-                    </Border>
                 </TreeDataTemplate>
             </TreeView.ItemTemplate>
 
@@ -76,21 +63,43 @@
                     <Setter Property="DragDrop.AllowDrop" Value="True" />
 
                     <Setter Property="ContextMenu">
-                        <ContextMenu>
-                            <MenuItem Header="Rename" Command="{Binding StartRenameCommand}" IsEnabled="{Binding Model.IsAccessible}" />
-                            <MenuItem Header="Delete" Command="{Binding DeleteCommand}" IsEnabled="{Binding Model.IsAccessible}" />
-                            <Separator IsVisible="{Binding Model.IsDirectory}" />
+                        <ContextMenu Focusable="False">
+                            <MenuItem Header="Add" Focusable="False">
+                                <MenuItem Header="Folder" Command="{Binding AddFolderCommand}" Focusable="False">
+                                    <MenuItem.Icon>
+                                        <Label Classes="icon" Content="&#xE25A;" RenderTransform="scale(1.7)"/>
+                                    </MenuItem.Icon>
+                                </MenuItem>
+                                <MenuItem Header="File" Command="{Binding AddFileCommand}" Focusable="False">
+                                    <MenuItem.Icon>
+                                        <Label Classes="icon" Content="&#xE484;" RenderTransform="scale(1.7)"/>
+                                    </MenuItem.Icon>
+                                </MenuItem>
+                            </MenuItem>
+                            <MenuItem Header="Rename" Command="{Binding StartRenameCommand}" IsEnabled="{Binding Model.IsAccessible}" Focusable="False"/>
+                            <MenuItem Header="Delete" Command="{Binding DeleteCommand}" IsEnabled="{Binding Model.IsAccessible}" Focusable="False"/>
+                            <Separator IsVisible="{Binding Model.IsDirectory}" Focusable="False"/>
                             <MenuItem Header="Refresh" Command="{Binding RefreshCommand}"
-                                      IsVisible="{Binding Model.IsDirectory}" />
+                                      IsVisible="{Binding Model.IsDirectory}" Focusable="False"/>
                         </ContextMenu>
                     </Setter>
                 </Style>
-                <Style Selector="Border.fileBorder.dragOver" x:DataType="vm:FileNodeViewModel">
-                    <Setter Property="BoxShadow" Value="inset 0 0 0 1 #CFFF0000"/>
+                
+                <Style Selector="TreeViewItem" x:DataType="vm:FileNodeViewModel">
+                    <Setter Property="Classes.isDropTarget" Value="{Binding IsDropTarget}"/>
+                </Style>
+                
+                <Style Selector="TreeViewItem.isDropTarget > Border#PART_ItemsBorder">
+                    <Setter Property="BoxShadow" Value="inset 0 0 0 1 #3FFF0000"/>
                     <Setter Property="CornerRadius" Value="4"/>
+                    <Setter Property="Background" Value="#1FFF0000"/>
                 </Style>
             </TreeView.Styles>
         </TreeView>
+        <Border Background="#2FFF0000" Margin="0" CornerRadius="4"
+                BorderThickness="1" BorderBrush="#AFFF0000"
+                IsVisible="{Binding IsDraggingOverRoot}"
+                IsHitTestVisible="False"/>
     </Grid>
 
 </UserControl>

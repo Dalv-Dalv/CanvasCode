@@ -3,8 +3,10 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using CanvasCode.Models;
 using CanvasCode.Others;
+using CanvasCode.ViewModels.Dialogs;
 using CommunityToolkit.Mvvm.Messaging;
 
 namespace CanvasCode.Services;
@@ -19,14 +21,109 @@ public class FolderDataService(IMessenger messenger) : ICacheManager {
 	private readonly IMessenger messenger = messenger;
 
 
+	public async Task<bool> CreateFolder(string parentPath) {
+		bool result = false;
+		
+		var dialog = new InputNameDialogViewModel {
+			Title = "Create Folder",
+			Icon = "\uE25E",
+			Message = "Enter Folder Name:",
+			DialogWidth = 500,
+			OnConfirm = async (vm) => {
+				if (string.IsNullOrWhiteSpace(vm.InputtedName) || vm.InputtedName.Any(ch => "\\/:*?\"<>|".Contains(ch))) {
+					vm.StatusText = "Invalid name.";
+					return false;
+				}
+				
+				var finalPath = Path.Combine(parentPath, vm.InputtedName);
+
+				if (Directory.Exists(finalPath)) {
+					vm.StatusText = "A folder with this name already exists!";
+					return false;
+				}
+
+				try {
+					Directory.CreateDirectory(finalPath);
+				} catch (Exception ex) {
+					vm.StatusText = $"Failed to create folder:\n{ex.Message}";
+				}
+
+				result = true;
+				
+				return true;
+			}
+		};
+		await App.DialogService.ShowDialog(dialog);
+
+		return result;
+	}
+
+	public async Task<bool> CreateFile(string parentPath) {
+		bool result = false;
+		
+		var dialog = new InputNameDialogViewModel {
+			Title = "Create File",
+			Icon = "\uE236",
+			Message = "Enter File Name:",
+			DialogWidth = 500,
+			OnConfirm = async (vm) => {
+				if (string.IsNullOrWhiteSpace(vm.InputtedName) || vm.InputtedName.Any(ch => "\\/:*?\"<>|".Contains(ch))) {
+					vm.StatusText = "Invalid name.";
+					return false;
+				}
+				
+				var finalPath = Path.Combine(parentPath, vm.InputtedName);
+
+				if (File.Exists(finalPath)) {
+					vm.StatusText = "A file with this name already exists!";
+					return false;
+				}
+
+				try {
+					await File.Create(finalPath).DisposeAsync();
+				} catch (Exception ex) {
+					vm.StatusText = $"Failed to create folder:\n{ex.Message}";
+					return false;
+				}
+
+				result = true;
+				
+				return true;
+			}
+		};
+		
+		await App.DialogService.ShowDialog(dialog);
+
+		return result;
+	}
+	
 	public void Delete(string path) {
-		try {
-			if (Directory.Exists(path)) Directory.Delete(path, recursive: true);
-			else if (File.Exists(path)) File.Delete(path);
-		} catch (Exception ex) {
-			Console.WriteLine("DELETE FAILED:");
-			Console.WriteLine(ex.Message);
-		}
+		var dialog = new ConfirmDialogViewModel {
+			Title = "Confirm Delete",
+			Icon = "\uE4A6",
+			Message = $"Are you sure you want to permanently delete {Path.GetFileName(path)}?",
+			ConfirmText = "Delete",
+			DialogWidth = 500,
+			OnConfirm = async (vm) => {
+				vm.ProgressText = "Deleting file...";
+
+				try {
+					if (Directory.Exists(path)) Directory.Delete(path, recursive: true);
+					else if (File.Exists(path)) File.Delete(path);
+				} catch (AccessViolationException) {
+					vm.StatusText = "File cannot be deleted, lacking access permissions!";
+				} catch (Exception ex) {
+					vm.StatusText = $"File could not be deleted:\n{ex.Message}";
+					return false;
+				}
+
+				vm.StatusText = "File successfuly deleted!";
+				
+				return true;
+			}
+		};
+
+		App.DialogService.ShowDialog(dialog);
 	}
 
 	public void Rename(string oldPath, string newName) {
@@ -42,6 +139,55 @@ public class FolderDataService(IMessenger messenger) : ICacheManager {
 			Console.WriteLine("RENAME FAILED:");
 			Console.WriteLine(ex.Message);
 		}
+	}
+	
+	public async Task<bool> Rename(string path) {
+		bool result = false;
+		
+		var dialog = new InputNameDialogViewModel {
+			Title = "Rename",
+			Message = "Enter New Name:",
+			DialogWidth = 500,
+			InputtedName = Path.GetFileName(path),
+			SelectionStart = 0,
+			SelectionEnd = Path.GetFileNameWithoutExtension(path).Length,
+			OnConfirm = async vm => {
+				if (string.IsNullOrWhiteSpace(vm.InputtedName) || vm.InputtedName.Any(ch => "\\/:*?\"<>|".Contains(ch))) {
+					vm.StatusText = "Invalid name.";
+					return false;
+				}
+
+				bool isDirectory = Directory.Exists(path); 
+				
+				var dir = Path.GetDirectoryName(path);
+				if (dir == null) {
+					vm.StatusText = "There is no parent folder.";
+					return false;
+				}
+				var newPath = Path.Combine(dir, vm.InputtedName);
+
+				if (Directory.Exists(newPath) ||  File.Exists(newPath)) {
+					vm.StatusText = "A file or folder with this name already exists!";
+					return false;
+				}
+
+				try {
+					if(isDirectory) Directory.Move(path, newPath);
+					else File.Move(path, newPath);
+				} catch (Exception ex) {
+					vm.StatusText = $"Rename failed:\n{ex.Message}";
+					return false;
+				}
+
+				result = true;
+				
+				return true;
+			}
+		};
+		
+		await App.DialogService.ShowDialog(dialog);
+
+		return result;
 	}
 	
 	public void Move(string sourcePath, string destinationPath) {

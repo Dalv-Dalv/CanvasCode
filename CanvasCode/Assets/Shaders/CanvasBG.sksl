@@ -31,7 +31,7 @@ float4 main(float2 fragCoord) {
 	
 	float hover_dist = length(hover_uv);
 	float dt = iTime - hover_start_time;
-	float smoothDT = calculateHoverEffectIntensity(0.7, 0.3);
+	float smoothDT = calculateHoverEffectIntensity(0.4, 0.3);
 	smoothDT = smoothDT * smoothDT * smoothDT * (smoothDT * (smoothDT * 6.0 - 15.0) + 10.0); 
 	float ripple_wave = abs(cos(hover_dist * 2.0 + dt * 4.0));
 	float2 ripple_dir = normalize(hover_uv);

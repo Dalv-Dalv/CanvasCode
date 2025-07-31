@@ -7,7 +7,13 @@ using CommunityToolkit.Mvvm.Input;
 namespace CanvasCode.ViewModels.CanvasWindows;
 
 public partial class CanvasShaderPreviewViewModel : ViewModelBase, ICanvasWindowContentViewModel {
+	public CanvasWindowViewModel ParentWindow { get; }
 	[ObservableProperty] private string shaderPath;
+
+	public CanvasShaderPreviewViewModel(CanvasWindowViewModel parentWindow) {
+		ParentWindow = parentWindow;
+	}
+	
 
 	public string GetTitle() {
 		return "Shader Preview";

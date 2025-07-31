@@ -1,8 +1,10 @@
-﻿using Avalonia;
+﻿using System;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Markup.Xaml;
 using CanvasCode.ViewModels;
+using CanvasCode.ViewModels.CanvasWindows;
 
 namespace CanvasCode.Views.CanvasWindows;
 
@@ -29,42 +31,21 @@ public partial class CanvasFolderTreeView : UserControl {
 	}
 
 	private void OnPointerPressed(object? sender, PointerPressedEventArgs e) {
-		if (sender is not Control { DataContext: FileNodeViewModel node }) return;
-		if (!e.Properties.IsLeftButtonPressed) return;
+		if (sender is not Control { DataContext: FileNodeViewModel node } c) return;
 
+		if (e.Properties.IsRightButtonPressed) {
+			c.FindControl<Border>("PART_LayoutRoot")?.Focus();
+		}
+		
+		if (!e.Properties.IsLeftButtonPressed) return;
+		
+		
 		var dragData = new DataObject();
+		dragData.Set("Files", new string[]{node.Model.FullPath});
 		dragData.Set(DataFormats.FileNames, new[]{ node.Model.FullPath });
 
 		currentDragEvent = new DragEvent(e, dragData, DragDropEffects.Move);
 	}
-
-	private void RenameTextBox_OnKeyDown(object? sender, KeyEventArgs e) {
-		if (sender is not TextBox textBox) return;
-		if (textBox.DataContext is not FileNodeViewModel vm) return;
-		
-		switch (e.Key) {
-			case Key.Enter:
-				vm.CommitRenameCommand.Execute(textBox.Text);
-				e.Handled = true;
-				break;
-
-			case Key.Escape:
-				vm.CancelRenameCommand.Execute(null);
-				e.Handled = true;
-				break;
-			case Key.Up:
-			case Key.Down:
-			case Key.Left:
-			case Key.Right:
-				e.Handled = true;
-				break;
-		}
-	}
-
-	private void RenameBox_OnTextInput(object? sender, TextInputEventArgs e) {
-		e.Handled = true;
-	}
-
 	private void OnPointerMoved(object? sender, PointerEventArgs e) {
 		if (currentDragEvent == null) return;
 		
@@ -74,6 +55,10 @@ public partial class CanvasFolderTreeView : UserControl {
 
 		DragDrop.DoDragDrop(currentDragEvent.e, currentDragEvent.data, currentDragEvent.effects);
 
+		currentDragEvent = null;
+	}
+
+	private void OnPointerReleased(object? sender, PointerReleasedEventArgs e) {
 		currentDragEvent = null;
 	}
 }

@@ -9,6 +9,7 @@ using Avalonia.Platform.Storage;
 using CanvasCode.Models;
 using CanvasCode.Others;
 using CanvasCode.ViewModels.CanvasWindows;
+using CanvasCode.ViewModels.Dialogs;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
@@ -19,9 +20,11 @@ public partial class MainWindowViewModel : ViewModelBase, IRecipient<EnterFullsc
 	
 	[ObservableProperty] private string? currentFolder = null;
 	[ObservableProperty] private bool isFullscreen;
-    
-	[ObservableProperty]
-	private ICanvasWindowContentViewModel? fullscreenContent;
+	[ObservableProperty] private bool isTitleBarVisible = false;
+	
+	[ObservableProperty] private ICanvasWindowContentViewModel? fullscreenContent;
+
+	[ObservableProperty] private DialogViewModel? currentDialog;
 	
 	public ObservableCollection<CanvasWindowViewModel> Windows { get; } = [];
 	public ObservableCollection<CanvasWindowViewModel> PinnedWindows { get; } = [];

@@ -1,20 +1,18 @@
 ﻿using System;
-using System.Collections.Generic;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using Avalonia.Interactivity;
-using Avalonia.Markup.Xaml;
 using Avalonia.Threading;
 using CanvasCode.Models.CommandPalettes;
-using CanvasCode.ViewModels;
+using CanvasCode.Others;
 using CanvasCode.ViewModels.CanvasWindows;
-using CanvasCode.ViewModels.CommandPalettes;
+using CommunityToolkit.Mvvm.Messaging;
 
 namespace CanvasCode.Views.CanvasWindows;
 
-public partial class CanvasWindowView : UserControl {
+public partial class CanvasWindowView : UserControl, IRecipient<RequestFocusMessage> {
 	private enum ThumbEvent {
 		SizeTL, SizeT, SizeTR,
 		SizeL , Drag , SizeR ,
@@ -31,19 +29,19 @@ public partial class CanvasWindowView : UserControl {
 	
 	public CanvasWindowView() {
 		InitializeComponent();
+		
+		App.Messenger.RegisterAll(this);
 	}
 
 	private void Window_OnPointerPressed(object? sender, PointerPressedEventArgs e) {
 		BringToFront();
-		Console.WriteLine("Window Pressed BTF");
 	}
 	private void OutermostWindow_OnPointerPressed(object? sender, PointerPressedEventArgs e) {
 		e.Handled = true; // Stop propagation to the pan and zoom canvas
-		Console.WriteLine("OUTER WINDOW PRESS");
 	}
 
 	private void Thumb_OnDragStarted(object? sender, VectorEventArgs e) {
-		if (DataContext is not CanvasWindowViewModel vm) return;
+		if (DataContext is not CanvasWindowViewModel) return;
 		if (sender is not Thumb thumb) return;
 
 		currentThumbEvent = thumb.Name switch {
@@ -65,7 +63,7 @@ public partial class CanvasWindowView : UserControl {
 	private void Thumb_OnDrag(object? sender, VectorEventArgs e) {
 		if (currentThumbEvent == ThumbEvent.None) return;
 		if (DataContext is not CanvasWindowViewModel vm) return;
-		if (sender is not Thumb thumb) return;
+		if (sender is not Thumb) return;
 
 		var delta = e.Vector;
 		
@@ -128,7 +126,6 @@ public partial class CanvasWindowView : UserControl {
 
 	private void Thumb_OnDragCompleted(object? sender, VectorEventArgs e) {
 		currentThumbEvent = ThumbEvent.None;
-		Console.WriteLine("Drag completed BTF");
 	}
 
 	private void BringToFront() {
@@ -139,13 +136,12 @@ public partial class CanvasWindowView : UserControl {
 		
 		vm.ZIndex = ++biggestZIndex;
 		frontVM = vm;
-		Console.WriteLine($"Zindex is {vm.ZIndex}");
 	}
 
 	private void Window_OnKeyDown(object? sender, KeyEventArgs e) {
 		if (DataContext is not CanvasWindowViewModel vm) return;
 		
-		if (e is { Key: Key.OemTilde, KeyModifiers: KeyModifiers.Control }) {
+		if (e is { Key: Key.Q, KeyModifiers: KeyModifiers.Control }) {
 			vm.ToggleQuickActions(true);
 			e.Handled = true;
 			return;
@@ -188,5 +184,13 @@ public partial class CanvasWindowView : UserControl {
 
 	private void ActualWindow_OnAttachedToVisualTree(object? sender, VisualTreeAttachmentEventArgs e) {
 		ActualWindow.Focus();
+	}
+
+	public void Receive(RequestFocusMessage message) {
+		if (message.TargetViewModel != this.DataContext) return;
+
+		Dispatcher.UIThread.Post(() => {
+			ActualWindow.Focus();
+		});
 	}
 }

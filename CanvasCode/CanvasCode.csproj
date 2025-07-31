@@ -28,12 +28,16 @@
         <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.0-preview.6.25358.103" />
         <PackageReference Include="PanAndZoom" Version="11.3.0.1" />
         <PackageReference Include="Xaml.Behaviors.Interactivity" Version="11.3.2" />
-        <PackageReference Include="Zafiro.Avalonia.FileExplorer" Version="29.0.21" />
+        <PackageReference Include="Zafiro.Avalonia" Version="29.0.28" />
     </ItemGroup>
 
     <ItemGroup>
       <Compile Update="Services\CacheEvictionService.cs">
         <DependentUpon>ICacheManager.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Views\Dialogs\InputNameDialogView.axaml.cs">
+        <DependentUpon>InputNameDialogView.axaml</DependentUpon>
+        <SubType>Code</SubType>
       </Compile>
     </ItemGroup>
 </Project>

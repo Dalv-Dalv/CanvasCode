@@ -1,0 +1,80 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:CanvasCode.ViewModels.Dialogs"
+             xmlns:i="clr-namespace:Avalonia.Xaml.Interactivity;assembly=Xaml.Behaviors.Interactivity"
+             xmlns:localBehaviours="clr-namespace:CanvasCode.Behaviours"
+             mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="250"
+             x:Class="CanvasCode.Views.Dialogs.ConfirmDialogView"
+             x:DataType="vm:ConfirmDialogViewModel"
+             Width="{Binding DialogWidth}"
+             Height="{Binding DialogHeight}">
+    
+    <Design.DataContext><vm:ConfirmDialogViewModel/></Design.DataContext>
+
+    <UserControl.RenderTransform>
+        <TranslateTransform X="{Binding Position.X}" Y="{Binding Position.Y}"/>
+    </UserControl.RenderTransform>
+    
+    <UserControl.Resources>
+        <ControlTheme x:Key="ThumbTheme" TargetType="Thumb">
+            <Setter Property="Template">
+                <ControlTemplate>
+                    <Border Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            Cursor="{TemplateBinding Cursor}"/>
+                </ControlTemplate>
+            </Setter>
+        </ControlTheme>
+    </UserControl.Resources>
+    
+    <Border Background="{StaticResource PanelColor}" CornerRadius="10"
+            BorderThickness="1.5" BorderBrush="{StaticResource PanelHighlight}"
+            BoxShadow="0 3 20 0 #5F000000" Margin="50" KeyDown="OnKeyDown">
+        <Grid RowDefinitions="Auto, *">
+            <StackPanel Grid.Row="0" Margin="10 5" Orientation="Horizontal" Spacing="0">
+                <Label Classes="icon" Content="{Binding Icon}" VerticalAlignment="Center" Margin="0" Padding="0"/>
+                <Label Content="{Binding Title}" Foreground="{StaticResource PrimaryText}" Grid.Row="0"/>
+            </StackPanel>
+            
+            <Thumb Grid.Row="0" DragDelta="Thumb_OnDrag" Background="Transparent" Theme="{StaticResource ThumbTheme}"/>
+            
+            <Border Grid.Row="1" Margin="10 0 10 10">
+                <Grid RowDefinitions="Auto, *, Auto, Auto">
+                    <TextBlock Grid.Row="0" Text="{Binding Message}" Foreground="{StaticResource PrimaryText}" TextWrapping="Wrap"/>
+                    
+                    <ScrollViewer Grid.Row="1">
+                        <TextBlock Grid.Row="1" Text="{Binding StatusText}" Foreground="{StaticResource ErrorText}" TextWrapping="Wrap" TextTrimming="CharacterEllipsis"/>
+                    </ScrollViewer>
+                    
+                    <TextBlock Grid.Row="2" Text="{Binding ProgressText}" Foreground="{StaticResource SecondaryText}" HorizontalAlignment="Right" Margin="0 5"
+                               IsVisible="{Binding IsBusy}"/>
+                    
+                    <Grid Grid.Row="3" ColumnDefinitions="*, Auto, Auto" ColumnSpacing="10">
+                        <Button Grid.Column="1" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" 
+                                Content="{Binding ConfirmText}"
+                                Foreground="{StaticResource PrimaryText}"
+                                BorderThickness="1" MinWidth="80"
+                                BorderBrush="{StaticResource PanelHighlight}"
+                                Command="{Binding ConfirmCommand}"
+                                x:Name="ConfirmButton">
+                            <i:Interaction.Behaviors>
+                                <localBehaviours:FocusOnVisibleBehaviour />
+                            </i:Interaction.Behaviors>
+                        </Button>
+                        
+                        <Button Grid.Column="2" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" 
+                                Content="{Binding CancelText}"
+                                Foreground="{StaticResource PrimaryText}"
+                                Background="Transparent"
+                                BorderThickness="1" MinWidth="80"
+                                BorderBrush="{StaticResource PanelHighlight}"
+                                Command="{Binding CancelCommand}"/>
+                    </Grid>
+                </Grid>
+            </Border>
+        </Grid>
+    </Border>
+</UserControl>

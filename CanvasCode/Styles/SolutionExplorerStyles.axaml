@@ -5,8 +5,8 @@
                     xmlns:converters="using:CanvasCode.Converters">
 
     <Design.PreviewWith>
-        <Border Padding="20"
-                MinWidth="300">
+        <Border Padding="20" Background="{StaticResource PrimaryBackground}"
+                Height="150">
             <TreeView SelectionMode="Multiple" FontSize="10">
                 <TreeViewItem Header="Level 1" IsExpanded="True">
                     <TreeViewItem Header="Level 2.1" IsSelected="True" IsExpanded="True">
@@ -16,6 +16,16 @@
                         </TreeViewItem>
                     </TreeViewItem>
                     <TreeViewItem Header="Level 2.2" IsEnabled="False" />
+                    <TreeViewItem Header="Level 2.2"/>
+                    <TreeViewItem Header="Level 2.2"/>
+                    <TreeViewItem Header="Level 2.2"/>
+                    <TreeViewItem Header="Level 2.2"/>
+                    <TreeViewItem Header="Level 2.2"/>
+                    <TreeViewItem Header="Level 2.2"/>
+                    <TreeViewItem Header="Level 2.2"/>
+                    <TreeViewItem Header="Level 2.2"/>
+                    <TreeViewItem Header="Level 2.2"/>
+                    <TreeViewItem Header="Level 2.2"/>
                 </TreeViewItem>
             </TreeView>
         </Border>
@@ -65,51 +75,53 @@
         <Setter Property="VerticalAlignment" Value="Center" />
         <Setter Property="Template">
             <ControlTemplate>
-                <StackPanel Orientation="Vertical">
-                    <i:Interaction.Behaviors>
-                        <behaviours:SuppressBringIntoViewBehaviour/>
-                    </i:Interaction.Behaviors>
-                    
-                    <Border Name="PART_LayoutRoot"
-                            Classes="TreeViewItemLayoutRoot"
-                            Focusable="True"
-                            Background="{TemplateBinding Background}"
-                            BorderBrush="{StaticResource PrimarySeparator}"
-                            BorderThickness="0"
-                            CornerRadius="4"
-                            TemplatedControl.IsTemplateFocusTarget="True">
+                <Border Name="PART_ItemsBorder">
+                    <StackPanel Orientation="Vertical">
+                        <i:Interaction.Behaviors>
+                            <behaviours:SuppressBringIntoViewBehaviour/>
+                        </i:Interaction.Behaviors>
                         
-                        <Border.Margin>
-                            <MultiBinding Converter="{x:Static converters:TreeViewItemMarginConverter.Instance}">
-                                <Binding Path="Level" RelativeSource="{RelativeSource TemplatedParent}" />
-                                <DynamicResource ResourceKey="TreeViewItemIndent" />
-                            </MultiBinding>
-                        </Border.Margin>
+                        <Border Name="PART_LayoutRoot"
+                                Classes="TreeViewItemLayoutRoot"
+                                Focusable="True"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{StaticResource PrimarySeparator}"
+                                BorderThickness="0"
+                                CornerRadius="4"
+                                TemplatedControl.IsTemplateFocusTarget="True">
+                            
+                            <Border.Margin>
+                                <MultiBinding Converter="{x:Static converters:TreeViewItemMarginConverter.Instance}">
+                                    <Binding Path="Level" RelativeSource="{RelativeSource TemplatedParent}" />
+                                    <DynamicResource ResourceKey="TreeViewItemIndent" />
+                                </MultiBinding>
+                            </Border.Margin>
 
-                        <Grid Name="PART_Header"
-                              ColumnDefinitions="Auto, *">
-                            <Panel Name="PART_ExpandCollapseChevronContainer"
-                                   Margin="{StaticResource TreeViewItemExpandCollapseChevronMargin}"
-                                   HorizontalAlignment="Stretch">
-                                <ToggleButton Name="PART_ExpandCollapseChevron"
-                                              Theme="{StaticResource FluentTreeViewExpandCollapseChevron}"
-                                              Focusable="False"
-                                              IsChecked="{TemplateBinding IsExpanded, Mode=TwoWay}" />
-                            </Panel>
-                            <ContentPresenter Name="PART_HeaderPresenter"
-                                              Grid.Column="1"
-                                              Focusable="False" Foreground="{StaticResource PrimaryText}"
-                                              Content="{TemplateBinding Header}"
-                                              ContentTemplate="{TemplateBinding HeaderTemplate}"
-                                              HorizontalAlignment="{TemplateBinding HorizontalAlignment}"
-                                              VerticalAlignment="{TemplateBinding VerticalAlignment}"
-                                              Margin="{TemplateBinding Padding}" />
-                        </Grid>
-                    </Border>
-                    <ItemsPresenter Name="PART_ItemsPresenter"
-                                    IsVisible="{TemplateBinding IsExpanded}"
-                                    ItemsPanel="{TemplateBinding ItemsPanel}" />
-                </StackPanel>
+                            <Grid Name="PART_Header"
+                                  ColumnDefinitions="Auto, *">
+                                <Panel Name="PART_ExpandCollapseChevronContainer"
+                                       Margin="{StaticResource TreeViewItemExpandCollapseChevronMargin}"
+                                       HorizontalAlignment="Stretch">
+                                    <ToggleButton Name="PART_ExpandCollapseChevron"
+                                                  Theme="{StaticResource FluentTreeViewExpandCollapseChevron}"
+                                                  Focusable="False"
+                                                  IsChecked="{TemplateBinding IsExpanded, Mode=TwoWay}" />
+                                </Panel>
+                                <ContentPresenter Name="PART_HeaderPresenter"
+                                                  Grid.Column="1"
+                                                  Focusable="False" Foreground="{StaticResource PrimaryText}"
+                                                  Content="{TemplateBinding Header}"
+                                                  ContentTemplate="{TemplateBinding HeaderTemplate}"
+                                                  HorizontalAlignment="{TemplateBinding HorizontalAlignment}"
+                                                  VerticalAlignment="{TemplateBinding VerticalAlignment}"
+                                                  Margin="{TemplateBinding Padding}" />
+                            </Grid>
+                        </Border>
+                        <ItemsPresenter Name="PART_ItemsPresenter"
+                                        IsVisible="{TemplateBinding IsExpanded}"
+                                        ItemsPanel="{TemplateBinding ItemsPanel}" />
+                    </StackPanel>
+                </Border>
             </ControlTemplate>
         </Setter>
 

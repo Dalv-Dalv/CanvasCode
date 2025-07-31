@@ -4,10 +4,13 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Avalonia.Controls;
 using Avalonia.Threading;
+using Avalonia.VisualTree;
 using CanvasCode.Models;
 using CanvasCode.Others;
 using CanvasCode.Services;
+using CanvasCode.Views.CanvasWindows;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
@@ -19,10 +22,11 @@ public partial class FileNodeViewModel : ViewModelBase,
                                          IRecipient<FileRenamedMessage>, IDisposable {
 	private readonly FolderDataService? folderService = null;
 	private readonly IMessenger? messenger = null;
-	
+
+	[ObservableProperty] private FileNodeViewModel? parent = null;
 	[ObservableProperty] private FolderModel model;
 	[ObservableProperty] private bool isExpanded = false;
-	[ObservableProperty] private bool isRenaming = false;
+	[ObservableProperty] private bool isDropTarget = false;
 
 	private bool childrenViewModelsLoaded;
 	private CancellationTokenSource? pruneCts;
@@ -30,8 +34,9 @@ public partial class FileNodeViewModel : ViewModelBase,
 	public ObservableCollection<FileNodeViewModel> Children { get; } = [];
 
 	
-	public FileNodeViewModel(FolderModel model, FolderDataService service, IMessenger messenger) {
+	public FileNodeViewModel(FileNodeViewModel? parent, FolderModel model, FolderDataService service, IMessenger messenger) {
 		Model = model;
+		Parent = parent;
 		folderService = service;
 		this.messenger = messenger;
 
@@ -42,10 +47,11 @@ public partial class FileNodeViewModel : ViewModelBase,
 		if (!Model.IsDirectory) return;
 		
 		if (ModelHasChildren()) 
-			Children.Add(new FileNodeViewModel()); // Dummy node
+			Children.Add(new FileNodeViewModel(this)); // Dummy node
 	}
 
-	private FileNodeViewModel() {
+	private FileNodeViewModel(FileNodeViewModel? parent) {
+		Parent = parent;
 		Model = new FolderModel("Loading...", "", false);
 	}
 	
@@ -67,7 +73,7 @@ public partial class FileNodeViewModel : ViewModelBase,
 		Children.Clear();
 
 		foreach (var childModel in Model.Children) {
-			Children.Add(new FileNodeViewModel(childModel, folderService, messenger));
+			Children.Add(new FileNodeViewModel(this, childModel, folderService, messenger));
 		}
 		
 		SortChildren();
@@ -76,43 +82,44 @@ public partial class FileNodeViewModel : ViewModelBase,
 	}
 
 	[RelayCommand]
+	private async Task AddFolder() {
+		if (!Model.IsDirectory && Parent == null) return;
+		
+		var path = Model.IsDirectory ? Model.FullPath : Path.GetDirectoryName(Model.FullPath);
+
+		if (path == null) return;
+		
+		var fileCreated = await folderService?.CreateFolder(path)!;
+
+		if (fileCreated && Model.IsDirectory && !IsExpanded) IsExpanded = true;
+	}
+
+	[RelayCommand]
+	private async Task AddFile() {
+		if (!Model.IsDirectory && Parent == null) return;
+		
+		var path = Model.IsDirectory ? Model.FullPath : Path.GetDirectoryName(Model.FullPath);
+
+		if (path == null) return;
+		
+		var fileCreated = await folderService?.CreateFile(path)!;
+
+		if (fileCreated && Model.IsDirectory && !IsExpanded) IsExpanded = true;
+	}
+	
+	[RelayCommand]
 	private void Delete() {
-		Console.WriteLine($"Deleting file {Model.Name}");
 		folderService?.Delete(Model.FullPath);
 	}
 
 	[RelayCommand]
-	private void StartRename() {
-		Console.WriteLine($"Starting rename on file {Model.Name}");
-		IsRenaming = true;
-	}
-
-	[RelayCommand]
-	private void CommitRename(string newName) {
-		bool ValidateName(string name) {
-			return !string.IsNullOrWhiteSpace(name) && !name.Any(ch => "\\/:*?\"<>|".Contains(ch));
-		}
+	private async Task StartRename() {
+		await folderService?.Rename(Model.FullPath)!;
 		
-		if (!IsRenaming) return;
-		
-		Console.WriteLine($"Committing rename on file {Model.Name}, new name is {newName}");
-		CancelRename();
-
-		if (!ValidateName(newName)) return;
-		
-		folderService?.Rename(Model.FullPath, newName);
-	}
-
-	[RelayCommand]
-	private void CancelRename() {
-		Console.WriteLine($"Canceled rename on file {Model.Name}");
-		IsRenaming = false;
 	}
 
 	[RelayCommand]
 	private void Refresh() {
-		Console.WriteLine($"Refresh file {Model.Name}");
-		
 		RefreshChildren();
 	}
 
@@ -130,7 +137,7 @@ public partial class FileNodeViewModel : ViewModelBase,
 				Children.Clear();
 				childrenViewModelsLoaded = false;
 				
-				if (ModelHasChildren()) Children.Add(new FileNodeViewModel());
+				if (ModelHasChildren()) Children.Add(new FileNodeViewModel(this));
 			});
 		}, TaskScheduler.Default);
 	}
@@ -143,7 +150,8 @@ public partial class FileNodeViewModel : ViewModelBase,
 	
 	public void Receive(FolderContentsChangedMessage message) {
 		if (Model.FullPath != message.path) return;
-
+		if (folderService == null) return;
+		
 		folderService.RemoveReference(Model.FullPath, this);
 		Model = folderService.GetModel(message.path);
 		folderService.AddReference(Model.FullPath, this);
@@ -207,7 +215,7 @@ public partial class FileNodeViewModel : ViewModelBase,
 		foreach (var m in Model.Children) {
 			if(currentChildren.ContainsKey(m.FullPath)) continue;
 			
-			Children.Add(new FileNodeViewModel(m, folderService, messenger));
+			Children.Add(new FileNodeViewModel(this, m, folderService, messenger));
 		}
 		
 		SortChildren();

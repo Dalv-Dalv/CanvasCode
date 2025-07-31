@@ -1,16 +1,10 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:m="using:CanvasCode.Models"
         xmlns:vm="using:CanvasCode.ViewModels"
-        xmlns:v="clr-namespace:CanvasCode.Views"
         xmlns:cwv="clr-namespace:CanvasCode.Views.CanvasWindows"
         xmlns:cwvm="clr-namespace:CanvasCode.ViewModels.CanvasWindows"
-        xmlns:converters="clr-namespace:CanvasCode.Converters"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:i="clr-namespace:Avalonia.Xaml.Interactivity;assembly=Xaml.Behaviors.Interactivity"
-        xmlns:localBehaviours="clr-namespace:CanvasCode.Behaviours"
-        xmlns:behaviours="clr-namespace:Avalonia.Xaml.Interactions.Core;assembly=Xaml.Behaviors.Interactions"
         xmlns:controls="using:CanvasCode.Controls"
         xmlns:paz="using:Avalonia.Controls.PanAndZoom"
         mc:Ignorable="d" d:DesignWidth="1920" d:DesignHeight="1080"
@@ -18,14 +12,11 @@
         x:DataType="vm:MainWindowViewModel"
         Icon="/Assets/avalonia-logo.ico"
         Title="CanvasCode"
-        SystemDecorations="None"
         ExtendClientAreaChromeHints="NoChrome"
-        ExtendClientAreaToDecorationsHint="True">
+        SystemDecorations="BorderOnly"
+        ExtendClientAreaToDecorationsHint="True"
+        ExtendClientAreaTitleBarHeightHint="32">
 
-    <Window.Resources>
-        <converters:FileModelToIconConverter x:Key="FileToIconConverter"/>
-        <converters:FileModelToColorConverter x:Key="FileToColorConverter"/>
-    </Window.Resources>
     
     <Design.DataContext>
         <!-- This only sets the DataContext for the previewer in an IDE,
@@ -33,12 +24,12 @@
         <vm:MainWindowViewModel />
     </Design.DataContext>
 
-    <Grid>
+    <Grid PointerMoved="Window_OnPointerMoved">
         <Grid IsVisible="{Binding !IsFullscreen}">
             <controls:Shader x:Name="CanvasShader" ShaderUri="avares://CanvasCode/Assets/Shaders/CanvasBG.sksl" Stretch="Fill" IsAnimated="True" AnimationFrameRate="5"/>
 
             <paz:ZoomBorder x:Name="MainCanvas" PointerPressed="MainCanvas_OnPointerPressed" PointerReleased="MainCanvas_OnPointerReleased" PointerMoved="MainCanvas_OnPointerMoved" ZoomChanged="MainCanvas_OnZoomChanged"
-                            Stretch="None" ClipToBounds="True" Focusable="True" PanButton="Left" MinZoomX="0.1" MinZoomY="0.1" MaxZoomX="10" MaxZoomY="10" 
+                            Stretch="None" ClipToBounds="True" Focusable="False" PanButton="Left" MinZoomX="0.1" MinZoomY="0.1" MaxZoomX="10" MaxZoomY="10" 
                             DragDrop.AllowDrop="True">
                 
                 <ItemsControl x:Name="WindowsItemsControl" ItemsSource="{Binding Windows}" ClipToBounds="False">
@@ -99,7 +90,7 @@
             </ItemsControl.ItemContainerTheme>
         </ItemsControl>
         
-        <Panel Height="32" VerticalAlignment="Top" Classes="titleBar">
+        <Panel Height="32" VerticalAlignment="Top" Background="{StaticResource PrimaryTransparentBackground}" IsVisible="{Binding IsTitleBarVisible}">
             <Grid ColumnDefinitions="*, Auto">
                 <Border Grid.Column="0" Background="Transparent" PointerPressed="TitleBarDrag_OnPointerPressed" DoubleTapped="TogleMaximized_OnClick"/>
                 
@@ -114,24 +105,30 @@
                         <Label Content="&#xE45E;" Classes="icon" FontSize="15" Padding="0" VerticalAlignment="Center"/>
                     </Button>
                     
-                    <Button Classes="panelButton" CornerRadius="2" VerticalAlignment="Stretch"
+                    <Button Classes="panelButton" CornerRadius="2 0 2 2" VerticalAlignment="Stretch"
                             Padding="8 0" Margin="0" Click="CloseWindow_OnClick">
                         <Label Content="&#xE4F6;" Classes="icon" FontSize="15" Padding="0" VerticalAlignment="Center"/>
                     </Button>
                 </StackPanel>
             </Grid>
-            
-            <Panel.Styles>
-                <Style Selector="Panel.titleBar">
-                    <Setter Property="Background" Value="{StaticResource PrimaryTransparentBackground}"/>
-                    <Setter Property="Opacity" Value="0"/>
-                </Style>
-                <Style Selector="Panel.titleBar:pointerover">
-                    <Setter Property="Opacity" Value="1"/>
-                </Style>
-            </Panel.Styles>
         </Panel>
         
         <ContentControl Content="{Binding FullscreenContent}" IsVisible="{Binding IsFullscreen}"/>
+        
+        <Border x:Name="DialogOverlay" Background="{StaticResource PrimaryTransparentBackground}"
+                Opacity="{Binding CurrentDialog.IsOpen, FallbackValue=0}"
+                IsVisible="{Binding #DialogOverlay.Opacity}">
+            <Border.Transitions>
+                <Transitions>
+                    <DoubleTransition Property="Opacity" Duration="0:0:0.1"/>
+                </Transitions>
+            </Border.Transitions>
+            
+            <ContentControl Content="{Binding CurrentDialog}"
+                            VerticalAlignment="Stretch"
+                            HorizontalAlignment="Stretch"
+                            VerticalContentAlignment="Center"
+                            HorizontalContentAlignment="Center"/>
+        </Border>
     </Grid>
 </Window>

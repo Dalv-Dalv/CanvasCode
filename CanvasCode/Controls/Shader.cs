@@ -24,7 +24,7 @@ public class Shader : UserControl {
 		StretchDirection? StretchDirection = default,
 		bool? IsAnimated = default,
 		double? FrameRate = default,
-		Dictionary<string, object> Uniforms = default);
+		Dictionary<string, object> Uniforms = null!);
 
 	private enum HandlerCommand {
 		Start,
