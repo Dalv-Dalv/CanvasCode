@@ -78,6 +78,9 @@ public partial class MainWindow : Window {
 	}
 	private void MainCanvas_OnZoomChanged(object sender, ZoomChangedEventArgs e) {
 		if (DataContext is not MainWindowViewModel vm) return;
+		
+		CanvasShader.SetUniform("posx", (float)MainCanvas.OffsetX);
+		CanvasShader.SetUniform("posy", (float)MainCanvas.OffsetY);
 	}
 
 	
@@ -192,7 +195,7 @@ public partial class MainWindow : Window {
 				var attr = File.GetAttributes(files[0]);
 				var type = attr.HasFlag(FileAttributes.Directory) ? CanvasWindowType.FolderTree : CanvasWindowType.CodeEditor;
 			
-				mvm.OpenNewWindow(e.GetPosition(WindowsItemsControl), files, type);
+				mvm.OpenNewWindow(e.GetPosition(WindowsItemsControl), files, type: type);
 				break;
 			}
 		}

@@ -6,15 +6,31 @@
              xmlns:vm="clr-namespace:CanvasCode.ViewModels.CanvasWindows"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="CanvasCode.Views.CanvasWindows.CanvasCodeEditorView"
-             x:DataType="vm:CanvasCodeEditorViewModel">
+             x:DataType="vm:CanvasCodeEditorViewModel"
+             Background="Transparent">
     
     <Design.DataContext> 
         <vm:CanvasCodeEditorViewModel/>
     </Design.DataContext>
     
-    <Grid>  
-        <ae:TextEditor x:Name="Editor" FontFamily="Cascadia Mono, Consolas, monospace" Foreground="{StaticResource PrimaryText}"
-                       FontSize="13" ShowLineNumbers="True" Document="{Binding CurrentDocument}"/>
+    <Grid>
+        <Grid>
+            <Border IsVisible="{Binding CurrentDocument, Converter={x:Static ObjectConverters.IsNull}}">
+                <StackPanel VerticalAlignment="Center" Spacing="30">
+                    <TextBlock HorizontalAlignment="Center" Foreground="{StaticResource SecondaryText}" TextWrapping="Wrap" TextAlignment="Center"
+                               Text="Press CTRL+~ or use the button to open a file"/>
+                    <Button Command="{Binding OpenFile}" VerticalAlignment="Center" HorizontalAlignment="Center" Padding="30 10">
+                        Open File
+                    </Button>
+                </StackPanel>
+            </Border>
+
+            <Border IsVisible="{Binding CurrentDocument, Converter={x:Static ObjectConverters.IsNotNull}}">
+                <ae:TextEditor x:Name="Editor" FontFamily="Cascadia Mono, Consolas, monospace" Foreground="{StaticResource PrimaryText}" FontSize="13" ShowLineNumbers="True"
+                               Document="{Binding CurrentDocument, Mode=TwoWay}"
+                               SyntaxHighlighting="{Binding CurrentSyntaxHighlighting}"/>
+            </Border>
+        </Grid>  
     </Grid>
     
 </UserControl>

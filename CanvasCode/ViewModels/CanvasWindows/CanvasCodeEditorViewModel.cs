@@ -1,15 +1,28 @@
 ﻿using System.Collections.Generic;
+using System.IO;
+using System.Threading.Tasks;
+using System.Xml;
+using Avalonia.Platform.Storage;
 using AvaloniaEdit.Document;
+using AvaloniaEdit.Highlighting;
+using AvaloniaEdit.Highlighting.Xshd;
 using CanvasCode.Models.CommandPalettes;
+using CanvasCode.Others;
+using CanvasCode.Views;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
 
 namespace CanvasCode.ViewModels.CanvasWindows;
 
 public partial class CanvasCodeEditorViewModel : ViewModelBase, ICanvasWindowContentViewModel {
 	public CanvasWindowViewModel ParentWindow { get; }
 
-	[ObservableProperty] private TextDocument currentDocument;
+	[ObservableProperty] private TextDocument? currentDocument = new("Hello");
+	[ObservableProperty] private string? pathToCurrentDocument;
+
+	[ObservableProperty] private IHighlightingDefinition currentSyntaxHighlighting;
+	
 	
 	public CanvasCodeEditorViewModel() { //FOR DESIGN VIEW ONLY
 		ParentWindow = null!;
@@ -18,7 +31,6 @@ public partial class CanvasCodeEditorViewModel : ViewModelBase, ICanvasWindowCon
 	
 	public CanvasCodeEditorViewModel(CanvasWindowViewModel parentWindow) {
 		ParentWindow = parentWindow;
-		CurrentDocument = new TextDocument("public string GetTitle() {\n\treturn  \"Code Editor\";\n}\n\npublic void SetData(object data) {\n\t//TODO WIP\n}\n\npublic List<CommandPaletteItem> GetQuickActions() {\n\treturn [\n\t\tnew CommandPaletteItem(\"Open File\", command: new RelayCommand(OpenFile))\n\t];\n}");
 	}
 	
 	public string GetTitle() {
@@ -26,16 +38,51 @@ public partial class CanvasCodeEditorViewModel : ViewModelBase, ICanvasWindowCon
 	}
 
 	public void SetData(object data) {
-		//TODO WIP
+		switch (data) {
+			case string file:
+				OpenDocumentFromPath(file);
+				break;
+			case string[] files:
+				OpenDocumentFromPath(files[0]);
+				break;
+		}
 	}
 
 	public List<CommandPaletteItem> GetQuickActions() {
 		return [
-			new CommandPaletteItem("Open File", command: new RelayCommand(OpenFile))
+			new CommandPaletteItem("Open File", command: OpenFileCommand)
 		];
 	}
 
-	public void OpenFile() {
-		// TODO WIP
+	[RelayCommand]
+	public async Task OpenFile() {
+		App.Messenger.Send(new RequestFocusMessage(ParentWindow));
+		
+		var files = await MainWindow.Instance.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions {
+			Title = "Select file", AllowMultiple = false
+		});
+		if (files.Count <= 0) return;
+		
+		var path = files[0].TryGetLocalPath();
+		if (path == null) return;
+
+		OpenDocumentFromPath(path);
+	}
+
+	public void OpenDocumentFromPath(string path) {
+		if (CurrentDocument != null) {
+			//TODO: Check for unsaved changes
+		}
+		
+		CurrentDocument = new TextDocument(File.ReadAllText(path));
+		PathToCurrentDocument = path;
+
+		CurrentSyntaxHighlighting = LoadHighlightingDefinition(path);
+	}
+
+	private IHighlightingDefinition LoadHighlightingDefinition(string filePath) {
+		var extension = Path.GetExtension(filePath).ToLowerInvariant();
+
+		return HighlightingManager.Instance.GetDefinitionByExtension(extension);;
 	}
 }

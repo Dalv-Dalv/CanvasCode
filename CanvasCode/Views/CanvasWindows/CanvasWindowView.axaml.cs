@@ -31,6 +31,8 @@ public partial class CanvasWindowView : UserControl, IRecipient<RequestFocusMess
 		InitializeComponent();
 		
 		App.Messenger.RegisterAll(this);
+		
+		Dispatcher.UIThread.Post(BringToFront);
 	}
 
 	private void Window_OnPointerPressed(object? sender, PointerPressedEventArgs e) {
@@ -66,6 +68,8 @@ public partial class CanvasWindowView : UserControl, IRecipient<RequestFocusMess
 		if (sender is not Thumb) return;
 
 		var delta = e.Vector;
+		var windowSize = MainWindow.Instance.ClientSize;
+		const double margin = -10; // For pinned windows for now
 		
 	    var currentSize = vm.Size;
 	    var currentPosition = vm.Position;
@@ -79,8 +83,14 @@ public partial class CanvasWindowView : UserControl, IRecipient<RequestFocusMess
 	    // Left/right resizing
 	    switch (currentThumbEvent) {
 		    case ThumbEvent.SizeL or ThumbEvent.SizeTL or ThumbEvent.SizeBL: // Left sided requires adjusting both width and position
-			    newLeft += delta.X;
-			    newWidth -= delta.X;
+			    if (vm.IsPinned) {
+				    var deviation = newLeft + delta.X - Math.Max(newLeft + delta.X, margin);
+				    newLeft += delta.X - deviation;
+				    newWidth -= delta.X - deviation;
+			    } else {
+				    newLeft += delta.X;
+				    newWidth -= delta.X;   
+			    }
 			    break;
 			
 		    case ThumbEvent.SizeR or ThumbEvent.SizeTR or ThumbEvent.SizeBR:
@@ -95,8 +105,14 @@ public partial class CanvasWindowView : UserControl, IRecipient<RequestFocusMess
 	    // Up/down resizing
 	    switch (currentThumbEvent) {
 		    case ThumbEvent.SizeT or ThumbEvent.SizeTL or ThumbEvent.SizeTR: // Top sided requires adjusting both height and position
-			    newTop += delta.Y;
-			    newHeight -= delta.Y;
+			    if (vm.IsPinned) {
+				    var deviation = newTop + delta.Y - Math.Max(newTop + delta.Y, margin);
+				    newTop += delta.Y - deviation;
+				    newHeight -= delta.Y - deviation;
+			    } else {
+				    newTop += delta.Y;
+				    newHeight -= delta.Y;   
+			    }
 			    break;
 			
 		    case ThumbEvent.SizeB or ThumbEvent.SizeBL or ThumbEvent.SizeBR:
@@ -110,14 +126,35 @@ public partial class CanvasWindowView : UserControl, IRecipient<RequestFocusMess
 
 	    newWidth = Math.Clamp(newWidth, MinWidth, MaxWidth);
 	    newHeight = Math.Clamp(newHeight, MinHeight, MaxHeight);
-	    
+
 	    if (currentThumbEvent is ThumbEvent.SizeL or ThumbEvent.SizeTL or ThumbEvent.SizeBL) {
-	        var actualWidthChange = currentSize.Width - newWidth;
-	        newLeft = currentPosition.X + actualWidthChange;
+		    var actualWidthChange = currentSize.Width - newWidth;
+		    newLeft = currentPosition.X + actualWidthChange;
 	    }
 	    if (currentThumbEvent is ThumbEvent.SizeT or ThumbEvent.SizeTL or ThumbEvent.SizeTR) {
-	        var actualHeightChange = currentSize.Height - newHeight;
-	        newTop = currentPosition.Y + actualHeightChange;
+		    var actualHeightChange = currentSize.Height - newHeight;
+		    newTop = currentPosition.Y + actualHeightChange;
+	    }
+	    
+	    if (vm.IsPinned) {
+		    newWidth = Math.Min(newWidth, windowSize.Width - margin * 2);
+		    newHeight = Math.Min(newHeight, windowSize.Height - margin * 2);
+
+		    var newRight = newLeft + newWidth;
+		    var newBottom = newTop + newHeight;
+			
+		    if (newRight > windowSize.Width - margin) {
+			    if (currentThumbEvent is ThumbEvent.Drag) newLeft = windowSize.Width - margin - newWidth;
+			    else newWidth = windowSize.Width - margin - newLeft;
+		    }
+
+		    if (newBottom > windowSize.Height - margin) {
+			    if (currentThumbEvent is ThumbEvent.Drag) newTop = windowSize.Height - margin - newHeight;
+			    else newHeight = windowSize.Height - margin - newTop;
+		    }
+
+		    if (newLeft < margin) newLeft = margin;
+		    if (newTop < margin) newTop = margin;
 	    }
 	    
 	    vm.Size = new Size(newWidth, newHeight);
@@ -141,7 +178,7 @@ public partial class CanvasWindowView : UserControl, IRecipient<RequestFocusMess
 	private void Window_OnKeyDown(object? sender, KeyEventArgs e) {
 		if (DataContext is not CanvasWindowViewModel vm) return;
 		
-		if (e is { Key: Key.Q, KeyModifiers: KeyModifiers.Control }) {
+		if (e is { Key: Key.OemTilde, KeyModifiers: KeyModifiers.Control }) {
 			vm.ToggleQuickActions(true);
 			e.Handled = true;
 			return;

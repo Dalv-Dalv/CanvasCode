@@ -38,6 +38,8 @@
                 <MergeResourceInclude Source="/Controls/ComboBox.axaml"/>
                 <MergeResourceInclude Source="/Controls/ScrollViewer.axaml"/>
                 <MergeResourceInclude Source="/Controls/TreeView.axaml"/>
+                <MergeResourceInclude Source="/Controls/TextEditor.axaml"/>
+                <MergeResourceInclude Source="/Controls/TextArea.axaml"/>
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
         

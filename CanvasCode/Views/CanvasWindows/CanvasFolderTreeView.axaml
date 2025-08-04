@@ -10,7 +10,8 @@
              xmlns:behaviours="clr-namespace:Avalonia.Xaml.Interactions.Core;assembly=Xaml.Behaviors.Interactions"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="CanvasCode.Views.CanvasWindows.CanvasFolderTreeView"
-             x:DataType="cwvm:CanvasFolderTreeViewModel">
+             x:DataType="cwvm:CanvasFolderTreeViewModel"
+             Background="Transparent">
 
     <Design.DataContext>
         <cwvm:CanvasFolderTreeViewModel />
@@ -36,7 +37,7 @@
                   KeyDown="TreeView_OnKeyDown" IsVisible="{Binding !IsEmpty}">
             <TreeView.ItemTemplate>
                 <TreeDataTemplate x:DataType="vm:FileNodeViewModel" ItemsSource="{Binding Children}">
-                    <Grid ColumnDefinitions="Auto, *" ColumnSpacing="4" PointerPressed="OnPointerPressed" PointerReleased="OnPointerReleased" PointerMoved="OnPointerMoved" Background="Transparent">
+                    <Grid ColumnDefinitions="Auto, *" ColumnSpacing="4" PointerPressed="OnPointerPressed" PointerReleased="OnPointerReleased" PointerMoved="OnPointerMoved" Background="Transparent" DoubleTapped="TreeViewItem_OnDoubleTapped">
                             <Label Grid.Column="0" FontFamily="{StaticResource PhosphorRegular}" VerticalAlignment="Center" FontSize="15">
                                 <Label.Foreground>
                                     <MultiBinding Converter="{StaticResource FileToColorConverter}">

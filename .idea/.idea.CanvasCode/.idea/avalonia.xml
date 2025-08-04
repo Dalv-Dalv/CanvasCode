@@ -10,7 +10,9 @@
         <entry key="CanvasCode/Controls/ResizableWindow.axaml" value="CanvasCode/CanvasCode.csproj" />
         <entry key="CanvasCode/Controls/ScrollViewer.axaml" value="CanvasCode/CanvasCode.csproj" />
         <entry key="CanvasCode/Controls/TemplatedControl1.axaml" value="CanvasCode/CanvasCode.csproj" />
+        <entry key="CanvasCode/Controls/TextArea.axaml" value="CanvasCode/CanvasCode.csproj" />
         <entry key="CanvasCode/Controls/TextBox.axaml" value="CanvasCode/CanvasCode.csproj" />
+        <entry key="CanvasCode/Controls/TextEditor.axaml" value="CanvasCode/CanvasCode.csproj" />
         <entry key="CanvasCode/Controls/TreeView.axaml" value="CanvasCode/CanvasCode.csproj" />
         <entry key="CanvasCode/Controls/TreeViewItem.axaml" value="CanvasCode/CanvasCode.csproj" />
         <entry key="CanvasCode/Controls/wewe.axaml" value="CanvasCode/CanvasCode.csproj" />

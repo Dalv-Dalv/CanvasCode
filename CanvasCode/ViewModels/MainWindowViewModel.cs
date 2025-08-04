@@ -41,23 +41,24 @@ public partial class MainWindowViewModel : ViewModelBase, IRecipient<EnterFullsc
 		OpenNewWindow(lastRightClickPos, CanvasWindowType.FolderTree);
 	}
 	public void SetLastRightClickPos(Point pos) => lastRightClickPos = pos;
-	public void OpenNewWindow(Point pos, CanvasWindowType type = CanvasWindowType.CodeEditor) {
+	public CanvasWindowViewModel OpenNewWindow(Point pos, CanvasWindowType type = CanvasWindowType.CodeEditor, bool centeredAtPos = true) {
 		var size = new Size(500, 500);
-		Windows.Add(new CanvasWindowViewModel {
-			Position = pos - new Point(size.Width / 2, size.Height / 2),
-			Size = size,
-			SelectedType = type
-		});
-	}
-	public void OpenNewWindow(Point pos, object data, CanvasWindowType type = CanvasWindowType.CodeEditor) {
-		var size = new Size(500, 500);
+
+		var newPos = centeredAtPos ? pos - new Point(size.Width / 2, size.Height / 2) : pos; 
+		
 		var window = new CanvasWindowViewModel {
-			Position = pos - new Point(size.Width / 2, size.Height / 2),
+			Position = newPos,
 			Size = size,
 			SelectedType = type
-		};
-		window.SetData(data);
+		}; 
 		Windows.Add(window);
+		return window;
+	}
+	public CanvasWindowViewModel OpenNewWindow(Point pos, object data, CanvasWindowType type = CanvasWindowType.CodeEditor, bool centeredAtPos = true) {
+		var window = OpenNewWindow(pos, type, centeredAtPos);
+		window.SetData(data);
+
+		return window;
 	}
 
 	public void PinWindow(CanvasWindowViewModel window) {

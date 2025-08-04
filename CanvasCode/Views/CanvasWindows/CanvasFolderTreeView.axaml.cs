@@ -3,6 +3,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Markup.Xaml;
+using Avalonia.Threading;
 using CanvasCode.ViewModels;
 using CanvasCode.ViewModels.CanvasWindows;
 
@@ -60,5 +61,15 @@ public partial class CanvasFolderTreeView : UserControl {
 
 	private void OnPointerReleased(object? sender, PointerReleasedEventArgs e) {
 		currentDragEvent = null;
+	}
+
+	private void TreeViewItem_OnDoubleTapped(object? sender, TappedEventArgs e) {
+		if (sender is not Control c) return;
+		if (c.DataContext is not FileNodeViewModel node) return;
+		if (node.Model.IsDirectory) return;
+		if (this.DataContext is not CanvasFolderTreeViewModel vm) return;
+
+		var pos = vm.ParentWindow.Position + new Point(vm.ParentWindow.Size.Width, 0);
+		(MainWindow.Instance.DataContext as MainWindowViewModel)?.OpenNewWindow(pos, node.Model.FullPath, CanvasWindowType.CodeEditor, centeredAtPos: false);
 	}
 }

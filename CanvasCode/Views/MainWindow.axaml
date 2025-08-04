@@ -11,11 +11,11 @@
         x:Class="CanvasCode.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Icon="/Assets/avalonia-logo.ico"
-        Title="CanvasCode"
-        ExtendClientAreaChromeHints="NoChrome"
-        SystemDecorations="BorderOnly"
-        ExtendClientAreaToDecorationsHint="True"
-        ExtendClientAreaTitleBarHeightHint="32">
+        Title="CanvasCode">
+        <!-- ExtendClientAreaChromeHints="NoChrome" -->
+        <!-- SystemDecorations="BorderOnly" -->
+        <!-- ExtendClientAreaToDecorationsHint="True" -->
+        <!-- ExtendClientAreaTitleBarHeightHint="32"> -->
 
     
     <Design.DataContext>
@@ -90,28 +90,28 @@
             </ItemsControl.ItemContainerTheme>
         </ItemsControl>
         
-        <Panel Height="32" VerticalAlignment="Top" Background="{StaticResource PrimaryTransparentBackground}" IsVisible="{Binding IsTitleBarVisible}">
-            <Grid ColumnDefinitions="*, Auto">
-                <Border Grid.Column="0" Background="Transparent" PointerPressed="TitleBarDrag_OnPointerPressed" DoubleTapped="TogleMaximized_OnClick"/>
-                
-                <StackPanel Grid.Column="1" Orientation="Horizontal">
-                    <Button Classes="panelButton" CornerRadius="2" VerticalAlignment="Stretch"
-                            Padding="8 0" Margin="0" Click="MinimizeButton_OnClick">
-                        <Label Content="&#xE32A;" Classes="icon" FontSize="15" Padding="0" VerticalAlignment="Center"/>
-                    </Button>
-                    
-                    <Button Classes="panelButton" CornerRadius="2" VerticalAlignment="Stretch"
-                            Padding="8 0" Margin="0" Click="TogleMaximized_OnClick">
-                        <Label Content="&#xE45E;" Classes="icon" FontSize="15" Padding="0" VerticalAlignment="Center"/>
-                    </Button>
-                    
-                    <Button Classes="panelButton" CornerRadius="2 0 2 2" VerticalAlignment="Stretch"
-                            Padding="8 0" Margin="0" Click="CloseWindow_OnClick">
-                        <Label Content="&#xE4F6;" Classes="icon" FontSize="15" Padding="0" VerticalAlignment="Center"/>
-                    </Button>
-                </StackPanel>
-            </Grid>
-        </Panel>
+        <!-- <Panel Height="32" VerticalAlignment="Top" Background="{StaticResource PrimaryTransparentBackground}" IsVisible="{Binding IsTitleBarVisible}"> -->
+        <!--     <Grid ColumnDefinitions="*, Auto"> -->
+        <!--         <Border Grid.Column="0" Background="Transparent" PointerPressed="TitleBarDrag_OnPointerPressed" DoubleTapped="TogleMaximized_OnClick"/> -->
+        <!--          -->
+        <!--         <StackPanel Grid.Column="1" Orientation="Horizontal"> -->
+        <!--             <Button Classes="panelButton" CornerRadius="2" VerticalAlignment="Stretch" -->
+        <!--                     Padding="8 0" Margin="0" Click="MinimizeButton_OnClick"> -->
+        <!--                 <Label Content="&#xE32A;" Classes="icon" FontSize="15" Padding="0" VerticalAlignment="Center"/> -->
+        <!--             </Button> -->
+        <!--              -->
+        <!--             <Button Classes="panelButton" CornerRadius="2" VerticalAlignment="Stretch" -->
+        <!--                     Padding="8 0" Margin="0" Click="TogleMaximized_OnClick"> -->
+        <!--                 <Label Content="&#xE45E;" Classes="icon" FontSize="15" Padding="0" VerticalAlignment="Center"/> -->
+        <!--             </Button> -->
+        <!--              -->
+        <!--             <Button Classes="panelButton" CornerRadius="2 0 2 2" VerticalAlignment="Stretch" -->
+        <!--                     Padding="8 0" Margin="0" Click="CloseWindow_OnClick"> -->
+        <!--                 <Label Content="&#xE4F6;" Classes="icon" FontSize="15" Padding="0" VerticalAlignment="Center"/> -->
+        <!--             </Button> -->
+        <!--         </StackPanel> -->
+        <!--     </Grid> -->
+        <!-- </Panel> -->
         
         <ContentControl Content="{Binding FullscreenContent}" IsVisible="{Binding IsFullscreen}"/>
         
