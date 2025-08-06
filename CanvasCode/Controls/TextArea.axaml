@@ -23,7 +23,7 @@
             <ControlTemplate>
                 <DockPanel Focusable="False" Background="{TemplateBinding Background}">
                     <ItemsControl DockPanel.Dock="Left"
-                                  Focusable="False"
+                                  Focusable="False" Margin="4 0 20 0"
                                   ItemsSource="{TemplateBinding LeftMargins}">
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>

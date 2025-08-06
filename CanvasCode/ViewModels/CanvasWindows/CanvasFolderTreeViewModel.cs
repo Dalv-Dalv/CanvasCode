@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Avalonia.Platform.Storage;
 using CanvasCode.Models;
+using CanvasCode.Models.CanvasWindows;
 using CanvasCode.Models.CommandPalettes;
 using CanvasCode.Others;
 using CanvasCode.Views;
@@ -49,7 +50,17 @@ public partial class CanvasFolderTreeViewModel : ViewModelBase, IDisposable, ICa
 		}
 	}
 
-	
+	public ICanvasContentState? GetState() {
+		return new CanvasFolderTreeState { RootPath = OpenFolderRoots.Count <= 0 ? null : OpenFolderRoots[0].Model.FullPath };
+	}
+	public void SetState(ICanvasContentState state) {
+		if (state is not CanvasFolderTreeState folderTreeState) return;
+		if (folderTreeState.RootPath == null) return;
+		
+		PopulateTree(folderTreeState.RootPath);
+	}
+
+
 	public string GetTitle() => "Folder Tree";
 
 	public List<CommandPaletteItem> GetQuickActions() => [

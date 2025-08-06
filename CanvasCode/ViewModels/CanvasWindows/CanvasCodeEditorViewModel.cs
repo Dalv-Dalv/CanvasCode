@@ -1,11 +1,14 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using System.Xml;
+using Avalonia.Platform;
 using Avalonia.Platform.Storage;
 using AvaloniaEdit.Document;
 using AvaloniaEdit.Highlighting;
 using AvaloniaEdit.Highlighting.Xshd;
+using CanvasCode.Models.CanvasWindows;
 using CanvasCode.Models.CommandPalettes;
 using CanvasCode.Others;
 using CanvasCode.Views;
@@ -48,6 +51,16 @@ public partial class CanvasCodeEditorViewModel : ViewModelBase, ICanvasWindowCon
 		}
 	}
 
+	public ICanvasContentState? GetState() {
+		return new CanvasCodeEditorState { FilePath = PathToCurrentDocument };
+	}
+	public void SetState(ICanvasContentState state) {
+		if (state is not CanvasCodeEditorState codeEditorState) return;
+		if (codeEditorState.FilePath == null) return;
+
+		OpenDocumentFromPath(codeEditorState.FilePath);
+	}
+
 	public List<CommandPaletteItem> GetQuickActions() {
 		return [
 			new CommandPaletteItem("Open File", command: OpenFileCommand)
@@ -81,8 +94,16 @@ public partial class CanvasCodeEditorViewModel : ViewModelBase, ICanvasWindowCon
 	}
 
 	private IHighlightingDefinition LoadHighlightingDefinition(string filePath) {
-		var extension = Path.GetExtension(filePath).ToLowerInvariant();
+		var assemblyName = typeof(App).Assembly.GetName().Name;
+		var uri = new Uri($"avares://{assemblyName}/Assets/SyntaxHighlighters/CSharp-Mode.xshd");
 
-		return HighlightingManager.Instance.GetDefinitionByExtension(extension);;
+		using var stream = AssetLoader.Open(uri);
+		if (stream == null) throw new InvalidOperationException($"Resource not found at URI: {uri}");
+		
+		using var reader = new XmlTextReader(stream);
+		var syntaxDefinition = HighlightingLoader.LoadXshd(reader);
+		var highlighting = HighlightingLoader.Load(syntaxDefinition,  HighlightingManager.Instance);
+
+		return highlighting;
 	}
 }

@@ -14,7 +14,6 @@
 
     <ItemGroup>
         <PackageReference Include="Avalonia" Version="11.3.2"/>
-        <PackageReference Include="Avalonia.AvaloniaEdit" Version="11.3.0" />
         <PackageReference Include="Avalonia.Desktop" Version="11.3.2"/>
         <PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.2"/>
         <PackageReference Include="Avalonia.Fonts.Inter" Version="11.3.2"/>
@@ -23,7 +22,6 @@
             <IncludeAssets Condition="'$(Configuration)' != 'Debug'">None</IncludeAssets>
             <PrivateAssets Condition="'$(Configuration)' != 'Debug'">All</PrivateAssets>
         </PackageReference>
-        <PackageReference Include="AvaloniaEdit.TextMate" Version="11.3.0" />
         <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.1"/>
         <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.0-preview.6.25358.103" />
         <PackageReference Include="PanAndZoom" Version="11.3.0.1" />
@@ -39,5 +37,9 @@
         <DependentUpon>InputNameDialogView.axaml</DependentUpon>
         <SubType>Code</SubType>
       </Compile>
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\..\AvaloniaEdit-master\src\AvaloniaEdit\AvaloniaEdit.csproj" />
     </ItemGroup>
 </Project>

@@ -4,6 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:ae="clr-namespace:AvaloniaEdit;assembly=AvaloniaEdit"
              xmlns:vm="clr-namespace:CanvasCode.ViewModels.CanvasWindows"
+             xmlns:local="clr-namespace:CanvasCode.Controls"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="CanvasCode.Views.CanvasWindows.CanvasCodeEditorView"
              x:DataType="vm:CanvasCodeEditorViewModel"
@@ -28,7 +29,8 @@
             <Border IsVisible="{Binding CurrentDocument, Converter={x:Static ObjectConverters.IsNotNull}}">
                 <ae:TextEditor x:Name="Editor" FontFamily="Cascadia Mono, Consolas, monospace" Foreground="{StaticResource PrimaryText}" FontSize="13" ShowLineNumbers="True"
                                Document="{Binding CurrentDocument, Mode=TwoWay}"
-                               SyntaxHighlighting="{Binding CurrentSyntaxHighlighting}"/>
+                               SyntaxHighlighting="{Binding CurrentSyntaxHighlighting}"
+                               LineNumbersForeground="{StaticResource SecondaryText}"/>
             </Border>
         </Grid>  
     </Grid>

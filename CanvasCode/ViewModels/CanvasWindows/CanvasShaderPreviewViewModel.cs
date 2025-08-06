@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using CanvasCode.Models.CanvasWindows;
 using CanvasCode.Models.CommandPalettes;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -20,8 +21,17 @@ public partial class CanvasShaderPreviewViewModel : ViewModelBase, ICanvasWindow
 	}
 
 	public void SetData(object data) {
-		// TODO WIP
+		// TODO
 	}
+
+	public ICanvasContentState? GetState() {
+		// TODO
+		return null;
+	}
+	public void SetState(ICanvasContentState state) {
+		// TODO
+	}
+
 
 	public List<CommandPaletteItem> GetQuickActions() {
 		return [
