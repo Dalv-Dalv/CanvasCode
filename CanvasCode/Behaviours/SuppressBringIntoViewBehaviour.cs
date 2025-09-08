@@ -16,9 +16,6 @@ public class SuppressBringIntoViewBehaviour : Behavior<Control> {
 	}
 
 	private void OnRequestBringIntoView(object? sender, RequestBringIntoViewEventArgs e) {
-		// This is the magic. By marking the event as handled,
-		// we prevent it from bubbling up to the ScrollViewer,
-		// which would otherwise perform the automatic scroll.
 		e.Handled = true;
 	}
 }

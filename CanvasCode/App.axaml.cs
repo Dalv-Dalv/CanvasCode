@@ -8,6 +8,7 @@ using Avalonia.Data.Core.Plugins;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
+using CanvasCode.Others;
 using CanvasCode.Services;
 using CanvasCode.ViewModels;
 using CanvasCode.Views;
@@ -19,6 +20,9 @@ public class App : Application {
 	
 	//TODO: Convert this to DI
 	public static DialogService DialogService = new();
+
+	public static FocusService FocusService;
+	
 	public static FolderDataService FolderService { get; private set; } = null!;
 	private static CacheEvictionService cacheEvictionService = null!;
 	public static IMessenger Messenger { get; set; } = null!;
@@ -50,11 +54,15 @@ public class App : Application {
 
 			// desktop.MainWindow.WindowState = WindowState.Maximized;
 
+			FocusService = new FocusService(desktop.MainWindow);
 			WindowingService = new WindowsWindowingService(desktop.MainWindow);
 			
 			desktop.ShutdownRequested += OnShutdown;
 		}
 
+		if(!Design.IsDesignMode)
+			DragDropManager.Initialize();
+		
 		base.OnFrameworkInitializationCompleted();
 	}
 

@@ -2,6 +2,7 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
@@ -10,6 +11,7 @@ using CanvasCode.Models;
 using CanvasCode.Others;
 using CanvasCode.ViewModels.CanvasWindows;
 using CanvasCode.ViewModels.Dialogs;
+using CanvasCode.Views;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
@@ -33,6 +35,10 @@ public partial class MainWindowViewModel : ViewModelBase, IRecipient<EnterFullsc
 	
 	public MainWindowViewModel() {
 		App.Messenger.RegisterAll(this);
+		
+		// var timer = new Timer((_) => {
+		// 	Console.WriteLine($"FOCUS: {MainWindow.Instance.FocusManager.GetFocusedElement()}");
+		// }, null, 0, 1000);
 	}
 
 
@@ -46,11 +52,11 @@ public partial class MainWindowViewModel : ViewModelBase, IRecipient<EnterFullsc
 
 		var newPos = centeredAtPos ? pos - new Point(size.Width / 2, size.Height / 2) : pos; 
 		
-		var window = new CanvasWindowViewModel {
+		var window = new CanvasWindowViewModel(type) {
 			Position = newPos,
-			Size = size,
-			SelectedType = type
+			Size = size
 		}; 
+		
 		Windows.Add(window);
 		return window;
 	}

@@ -2,10 +2,10 @@
 
 public interface ICanvasContentState { }
 
-public struct CanvasCodeEditorState : ICanvasContentState {
-	public string? FilePath;
+public struct CanvasCodeEditorState(string? filePath) : ICanvasContentState {
+	public string? FilePath = filePath;
 }
 
-public struct CanvasFolderTreeState : ICanvasContentState {
-	public string? RootPath;
+public struct CanvasFolderTreeState(string? rootPath) : ICanvasContentState {
+	public string? RootPath = rootPath;
 }

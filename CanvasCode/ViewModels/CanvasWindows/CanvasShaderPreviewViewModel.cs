@@ -10,6 +10,8 @@ namespace CanvasCode.ViewModels.CanvasWindows;
 public partial class CanvasShaderPreviewViewModel : ViewModelBase, ICanvasWindowContentViewModel {
 	public CanvasWindowViewModel ParentWindow { get; }
 	[ObservableProperty] private string shaderPath;
+	
+	public event Action<ICanvasContentState>? OnStateChanged;
 
 	public CanvasShaderPreviewViewModel(CanvasWindowViewModel parentWindow) {
 		ParentWindow = parentWindow;

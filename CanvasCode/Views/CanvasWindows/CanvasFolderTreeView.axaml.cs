@@ -4,6 +4,7 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Markup.Xaml;
 using Avalonia.Threading;
+using CanvasCode.Others;
 using CanvasCode.ViewModels;
 using CanvasCode.ViewModels.CanvasWindows;
 
@@ -42,8 +43,7 @@ public partial class CanvasFolderTreeView : UserControl {
 		
 		
 		var dragData = new DataObject();
-		dragData.Set("Files", new string[]{node.Model.FullPath});
-		dragData.Set(DataFormats.FileNames, new[]{ node.Model.FullPath });
+		dragData.Set(DataFormats.FileNames, new string[]{ node.Model.FullPath });
 
 		currentDragEvent = new DragEvent(e, dragData, DragDropEffects.Move);
 	}
@@ -52,7 +52,7 @@ public partial class CanvasFolderTreeView : UserControl {
 		
 		var delta = currentDragEvent.e.GetPosition(null) - e.GetPosition(null);
 		var sqrLen = delta.X * delta.X + delta.Y * delta.Y;
-		if (sqrLen <= 5 * 5) return;
+		if (sqrLen <= DragDropManager.SqrDragStartDistance) return;
 
 		DragDrop.DoDragDrop(currentDragEvent.e, currentDragEvent.data, currentDragEvent.effects);
 

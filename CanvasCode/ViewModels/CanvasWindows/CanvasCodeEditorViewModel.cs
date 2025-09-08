@@ -25,7 +25,8 @@ public partial class CanvasCodeEditorViewModel : ViewModelBase, ICanvasWindowCon
 	[ObservableProperty] private string? pathToCurrentDocument;
 
 	[ObservableProperty] private IHighlightingDefinition currentSyntaxHighlighting;
-	
+
+	public event Action<ICanvasContentState>? OnStateChanged;
 	
 	public CanvasCodeEditorViewModel() { //FOR DESIGN VIEW ONLY
 		ParentWindow = null!;
@@ -66,6 +67,7 @@ public partial class CanvasCodeEditorViewModel : ViewModelBase, ICanvasWindowCon
 			new CommandPaletteItem("Open File", command: OpenFileCommand)
 		];
 	}
+	
 
 	[RelayCommand]
 	public async Task OpenFile() {
@@ -105,5 +107,9 @@ public partial class CanvasCodeEditorViewModel : ViewModelBase, ICanvasWindowCon
 		var highlighting = HighlightingLoader.Load(syntaxDefinition,  HighlightingManager.Instance);
 
 		return highlighting;
+	}
+
+	partial void OnPathToCurrentDocumentChanged(string? value) {
+		OnStateChanged?.Invoke(GetState());
 	}
 }

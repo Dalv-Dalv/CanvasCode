@@ -5,6 +5,7 @@ using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Threading;
+using CanvasCode.Models.CanvasWindows;
 using CanvasCode.Models.CommandPalettes;
 using CanvasCode.Others;
 using CanvasCode.ViewModels.CanvasWindows;
@@ -33,6 +34,8 @@ public partial class CanvasWindowView : UserControl, IRecipient<RequestFocusMess
 		App.Messenger.RegisterAll(this);
 		
 		Dispatcher.UIThread.Post(BringToFront);
+		
+		AddHandler(InputElement.PointerPressedEvent, BringToFront, RoutingStrategies.Bubble);
 	}
 
 	private void Window_OnPointerPressed(object? sender, PointerPressedEventArgs e) {
@@ -55,8 +58,7 @@ public partial class CanvasWindowView : UserControl, IRecipient<RequestFocusMess
 			"T"  => ThumbEvent.SizeT,
 			"R"  => ThumbEvent.SizeR,
 			"B"  => ThumbEvent.SizeB,
-			"D"  => ThumbEvent.Drag,
-			_    => ThumbEvent.None
+			_    => ThumbEvent.Drag
 		};
 		
 		BringToFront();
@@ -229,5 +231,59 @@ public partial class CanvasWindowView : UserControl, IRecipient<RequestFocusMess
 		Dispatcher.UIThread.Post(() => {
 			ActualWindow.Focus();
 		});
+	}
+
+	private void Tab_OnAttachedToVisualTree(object? sender, VisualTreeAttachmentEventArgs e) {
+		if (sender is not Control control) return;
+		
+		TabsScrollViewer.Offset += Vector.UnitX * 1000000000;
+	}
+
+	private void Tab_OnDetachedFromVisualTree(object? sender, VisualTreeAttachmentEventArgs e) {
+		Dispatcher.UIThread.Post(() => {
+			ActualWindow.Focus();
+		});
+	}
+
+	
+	
+	
+	
+	private record DragEvent(PointerEventArgs e, IDataObject data, DragDropEffects effects);
+
+	private DragEvent? currentDragEvent = null;
+	private void Tab_OnPointerPressed(object? sender, PointerPressedEventArgs e) {
+		Console.WriteLine("TAB ON POINTER PRESSED");
+		
+		if (sender is not Control { DataContext: CanvasWindowTabViewModel tab } c) return;
+
+		if (!e.Properties.IsLeftButtonPressed) return;
+		
+		var dragData = new DataObject();
+		dragData.Set("Tab Origin", this);
+		dragData.Set("Tab Data", tab);
+
+		currentDragEvent = new DragEvent(e, dragData, DragDropEffects.Move);
+	}
+
+	private void Tab_OnPointerMoved(object? sender, PointerEventArgs e) {
+		Console.WriteLine("TAB ON POINTER MOVED");
+		if (currentDragEvent == null) return;
+		
+		var delta = currentDragEvent.e.GetPosition(null) - e.GetPosition(null);
+		var sqrLen = delta.X * delta.X + delta.Y * delta.Y;
+		if (sqrLen <= DragDropManager.SqrDragStartDistance) return;
+
+		DragDrop.DoDragDrop(currentDragEvent.e, currentDragEvent.data, currentDragEvent.effects);
+
+		if (currentDragEvent.e.Source is Control c) {
+			c.IsVisible = false;
+		}
+		
+		currentDragEvent = null;
+	}
+
+	private void Tab_OnPointerReleased(object? sender, PointerReleasedEventArgs e) {
+		currentDragEvent = null;
 	}
 }

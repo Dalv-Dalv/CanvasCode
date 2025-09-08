@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using Avalonia.Input;
 using Avalonia.Platform.Storage;
 using CanvasCode.Models;
 using CanvasCode.Models.CanvasWindows;
@@ -16,7 +18,8 @@ using CommunityToolkit.Mvvm.Messaging;
 
 namespace CanvasCode.ViewModels.CanvasWindows;
 
-public partial class CanvasFolderTreeViewModel : ViewModelBase, IDisposable, ICanvasWindowContentViewModel, IRecipient<FolderContentsChangedMessage> {
+public partial class CanvasFolderTreeViewModel : ViewModelBase, IDisposable, ICanvasWindowContentViewModel, IRecipient<FolderContentsChangedMessage>, 
+												 IDragDropInteractable {
 	public CanvasWindowViewModel ParentWindow { get; }
 	public ObservableCollection<FileNodeViewModel> OpenFolderRoots { get; } = [];
 	[ObservableProperty] private bool isDraggingOverRoot = false;
@@ -26,7 +29,8 @@ public partial class CanvasFolderTreeViewModel : ViewModelBase, IDisposable, ICa
 
 
 	private Timer validationTimer;
-	
+
+	public event Action<ICanvasContentState>? OnStateChanged;
 	
 	
 	public CanvasFolderTreeViewModel(CanvasWindowViewModel parentWindow) {
@@ -38,6 +42,10 @@ public partial class CanvasFolderTreeViewModel : ViewModelBase, IDisposable, ICa
 		validationTimer = new Timer(_ => {
 			RevalidateRoots();
 		}, null, TimeSpan.Zero, TimeSpan.FromSeconds(5));
+
+		OpenFolderRoots.CollectionChanged += (_, _) => {
+			OnStateChanged?.Invoke(GetState());
+		};
 	}
 	public void SetData(object data) {
 		switch (data) {
@@ -66,9 +74,8 @@ public partial class CanvasFolderTreeViewModel : ViewModelBase, IDisposable, ICa
 	public List<CommandPaletteItem> GetQuickActions() => [
 		new("Open Folder", command: OpenFolderCommand)
 	];
-	
 
-	
+
 	[RelayCommand]
 	private async Task OpenFolder() {
 		var folders = await MainWindow.Instance.StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions {
@@ -138,5 +145,26 @@ public partial class CanvasFolderTreeViewModel : ViewModelBase, IDisposable, ICa
 	public void Dispose() {
 		App.Messenger.UnregisterAll(this);
 		validationTimer.Dispose();
+	}
+
+	public void OnDragDropEnter(DragEventArgs e) {
+		IsDraggingOverRoot = true;
+	}
+
+	public void OnDragDropHover(DragEventArgs e) {}
+	public void OnDragDropExit(DragEventArgs e) {
+		IsDraggingOverRoot = false;
+	}
+
+	public void ReceiveDrop(DragEventArgs e) {
+		IsDraggingOverRoot = false;
+		if (OpenFolderRoots.Count <= 0) return;
+
+		if (!DragDropManager.TryGetFiles(e, out var filePaths)) return;
+		
+		App.Messenger.Send(new RequestFocusMessage(ParentWindow));
+		
+		Debug.Assert(filePaths != null, nameof(filePaths) + " != null");
+		App.FolderService.Move(filePaths[0], OpenFolderRoots[0].Model.FullPath);
 	}
 }

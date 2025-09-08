@@ -3,16 +3,17 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="clr-namespace:CanvasCode.ViewModels.CanvasWindows"
-             xmlns:cc="clr-namespace:CanvasCode.Controls"
              xmlns:cpvm="clr-namespace:CanvasCode.ViewModels.CommandPalettes"
              xmlns:converters="clr-namespace:CanvasCode.Converters"
+             xmlns:i="clr-namespace:Avalonia.Xaml.Interactivity;assembly=Xaml.Behaviors.Interactivity"
+             xmlns:localBehaviours="clr-namespace:CanvasCode.Behaviours"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="CanvasCode.Views.CanvasWindows.CanvasWindowView"
              x:DataType="vm:CanvasWindowViewModel"
              Foreground="{StaticResource PrimaryText}">
-    
+
     <Design.DataContext>
-        <vm:CanvasWindowViewModel/>
+        <vm:CanvasWindowViewModel />
     </Design.DataContext>
 
     <UserControl.Resources>
@@ -22,79 +23,148 @@
                     <Border Background="{TemplateBinding Background}"
                             BorderBrush="{TemplateBinding BorderBrush}"
                             BorderThickness="{TemplateBinding BorderThickness}"
-                            Cursor="{TemplateBinding Cursor}"/>
+                            Cursor="{TemplateBinding Cursor}" />
                 </ControlTemplate>
             </Setter>
         </ControlTheme>
+
+        <converters:WindowTabToTitleConverter x:Key="TabToTitleConverter" />
+        <converters:WindowTabToIconConverter x:Key="TabToIconConverter" />
+        <converters:WindowTabToColorConverter x:Key="TabToColorConverter" />
     </UserControl.Resources>
-    
+
     <Grid ColumnDefinitions="8, *, 8" RowDefinitions="8, *, 8" PointerPressed="OutermostWindow_OnPointerPressed" Background="Transparent">
         <!--Actual window-->
         <Border Grid.Row="1" Grid.Column="1" Classes="windowContainer" CornerRadius="10">
             <Grid KeyDown="Window_OnKeyDown" Focusable="True" x:Name="ActualWindow" AttachedToVisualTree="ActualWindow_OnAttachedToVisualTree" PointerPressed="Window_OnPointerPressed">
-                <Border ClipToBounds="True" CornerRadius="10">
+                <Border ClipToBounds="True" CornerRadius="10" Background="{StaticResource PrimaryTransparentBackground}">
                     <Grid RowDefinitions="Auto, *">
-                        <Border Grid.Row="0" Height="34" Background="{StaticResource PanelColor}" IsVisible="{Binding IsHeaderVisible}">
-                            <Grid ColumnDefinitions="Auto, *, Auto">
-                                <ComboBox Grid.Column="0" CornerRadius="9 2 2 2" MinHeight="0" VerticalAlignment="Center"
-                                          ItemsSource="{Binding AvailableTypes}"
-                                          Margin="2 1 2 0" Padding="10 7 7 7" Focusable="False"
-                                          SelectedItem="{Binding SelectedType, Mode=TwoWay}" DropDownClosed="ComboBox_OnDropDownClosed"/>
-                                
-                                <Thumb Grid.Column="1" x:Name="D" DragDelta="Thumb_OnDrag" DragStarted="Thumb_OnDragStarted" DragCompleted="Thumb_OnDragCompleted" Background="Transparent" Theme="{StaticResource ThumbTheme}"/>
-                    
-                                <StackPanel Grid.Column="2" Orientation="Horizontal">
-                                    <Button Classes="panelButton" Command="{Binding PinWindowCommand}"
-                                            Padding="7 0 0 0" VerticalAlignment="Stretch" Margin="0 0 0 -0.5"
-                                            CornerRadius="2" IsVisible="{Binding !IsPinned}">
-                                        <Label Content="&#xE3E2;" Classes="icon" FontSize="20" Padding="0 0 8 0"
-                                               VerticalAlignment="Center"/>
-                                    </Button>
-                                    <Button Classes="panelButton" Command="{Binding UnpinWindowCommand}"
-                                            Padding="7 0 0 0" VerticalAlignment="Stretch" Margin="0 0 0 -0.5"
-                                            CornerRadius="2" IsVisible="{Binding IsPinned}">
-                                        <Label Content="&#xE3E4;" Classes="iconFill" FontSize="20" Padding="0 0 8 0"
-                                               VerticalAlignment="Center"/>
-                                    </Button>
-                                    <Button Classes="panelButton" Command="{Binding CloseWindowCommand}"
-                                            Padding="7 0 0 0" VerticalAlignment="Stretch" Margin="0 0 0 -0.5"
-                                            CornerRadius="2">
-                                        <Label Content="&#xE4F6;" Classes="icon" FontSize="20" Padding="0 0 8 0"
-                                               VerticalAlignment="Center"/>
-                                    </Button>
-                                </StackPanel>
+                        <Border Grid.Row="0" Height="40" IsVisible="{Binding IsHeaderVisible}"
+                                Background="#10000000">
+                            <Grid ColumnDefinitions="*, Auto">
+                                <DockPanel>
+                                    <Grid ColumnDefinitions="*, Auto">
+                                        <ScrollViewer x:Name="TabsScrollViewer" DockPanel.Dock="Left" VerticalScrollBarVisibility="Disabled" BringIntoViewOnFocusChange="True"
+                                                      HorizontalScrollBarVisibility="Hidden" IsScrollChainingEnabled="False"> <!--TODO: When you click on a tab, bring it into view-->
+                                            <i:Interaction.Behaviors>
+                                                <localBehaviours:HorizontalScrollBehavior/>
+                                            </i:Interaction.Behaviors>
+                                            <ItemsControl ItemsSource="{Binding OpenTabs}" Margin="1.1 0 0 0">
+                                                <ItemsControl.ItemsPanel>
+                                                    <ItemsPanelTemplate>
+                                                        <StackPanel Orientation="Horizontal" />
+                                                    </ItemsPanelTemplate>
+                                                </ItemsControl.ItemsPanel>
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <Button Background="#20FFFFFF" CornerRadius="7 7 7 7" 
+                                                                Margin="1.25 2.5" Command="{Binding ClickedOnCommand}" 
+                                                                Padding="0" VerticalAlignment="Stretch" BorderThickness="0" AttachedToVisualTree="Tab_OnAttachedToVisualTree" DetachedFromVisualTree="Tab_OnDetachedFromVisualTree">
+                                                            <Border Padding="0" Margin="0" CornerRadius="7 7 7 7" ClipToBounds="True" DragDrop.AllowDrop="True" PointerPressed="Tab_OnPointerPressed" PointerMoved="Tab_OnPointerMoved" PointerReleased="Tab_OnPointerReleased">
+                                                                <Grid RowDefinitions="*, Auto">
+                                                                    <StackPanel Orientation="Horizontal">
+                                                                        <Label Classes="icon" FontSize="16" VerticalAlignment="Center" Padding="4 0 0 3">
+                                                                            <Label.Content>
+                                                                                <MultiBinding Converter="{StaticResource TabToIconConverter}">
+                                                                                    <Binding Path="Type" /> 
+                                                                                    <Binding Path="State" />
+                                                                                </MultiBinding>
+                                                                            </Label.Content>
+                                                                            
+                                                                            <Label.Foreground>
+                                                                                <MultiBinding Converter="{StaticResource TabToColorConverter}">
+                                                                                    <Binding Path="Type" /> 
+                                                                                    <Binding Path="State" />
+                                                                                </MultiBinding>
+                                                                            </Label.Foreground>
+                                                                        </Label>
+                                                                        <Label MinWidth="50" FontSize="16" VerticalAlignment="Center" Padding="4 0 0 0" Foreground="{StaticResource PrimaryText}">
+                                                                            <Label.Content>
+                                                                                <MultiBinding Converter="{StaticResource TabToTitleConverter}">
+                                                                                    <Binding Path="Type" /> 
+                                                                                    <Binding Path="State" />
+                                                                                </MultiBinding>
+                                                                            </Label.Content>
+                                                                        </Label>
+                                                                        <Button Classes="panelButton" Padding="7 0 0 0" VerticalAlignment="Stretch" Margin="0 0 0 -0.5" CornerRadius="5" Command="{Binding CloseCommand}">
+                                                                            <Label Content="&#xE4F6;" Classes="icon" FontSize="20" Padding="0 0 8 0"
+                                                                                   VerticalAlignment="Center" IsHitTestVisible="False"/>
+                                                                        </Button>
+                                                                    </StackPanel>
+
+                                                                    <Rectangle Grid.Row="1" Fill="Red" Height="1" IsVisible="{Binding IsOpen}" />
+                                                                </Grid>
+                                                            </Border>
+                                                        </Button>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                        </ScrollViewer>
+                                        <Thumb Grid.Column="1" DockPanel.Dock="Right" x:Name="D2" DragDelta="Thumb_OnDrag" DragStarted="Thumb_OnDragStarted" DragCompleted="Thumb_OnDragCompleted" Background="Transparent" Theme="{StaticResource ThumbTheme}" Width="50"/>
+                                    </Grid>
+                                    <Thumb DockPanel.Dock="Right" x:Name="D" DragDelta="Thumb_OnDrag" DragStarted="Thumb_OnDragStarted" DragCompleted="Thumb_OnDragCompleted" Background="Transparent" Theme="{StaticResource ThumbTheme}" MinWidth="0" />
+                                </DockPanel>
+
+                                <!-- <ComboBox Grid.Column="0" CornerRadius="9 2 2 2" MinHeight="0" VerticalAlignment="Center" -->
+                                <!--           ItemsSource="{Binding AvailableTypes}" -->
+                                <!--           Margin="2 1 2 0" Padding="10 7 7 7" Focusable="False" -->
+                                <!--           SelectedItem="{Binding SelectedType, Mode=TwoWay}" DropDownClosed="ComboBox_OnDropDownClosed"/> -->
+
+                                <Border Grid.Column="1">
+                                    <StackPanel Orientation="Horizontal">
+                                        <Thumb DockPanel.Dock="Right" x:Name="D1" DragDelta="Thumb_OnDrag" DragStarted="Thumb_OnDragStarted" DragCompleted="Thumb_OnDragCompleted" Background="Transparent" Theme="{StaticResource ThumbTheme}" Width="50" />
+                                        <Button Classes="panelButton" Command="{Binding PinWindowCommand}"
+                                                Padding="7 0 0 0" VerticalAlignment="Stretch" Margin="0 0 0 -0.5"
+                                                CornerRadius="2" IsVisible="{Binding !IsPinned}">
+                                            <Label Content="&#xE3E2;" Classes="icon" FontSize="20" Padding="0 0 8 0"
+                                                   VerticalAlignment="Center" />
+                                        </Button>
+                                        <Button Classes="panelButton" Command="{Binding UnpinWindowCommand}"
+                                                Padding="7 0 0 0" VerticalAlignment="Stretch" Margin="0 0 0 -0.5"
+                                                CornerRadius="2" IsVisible="{Binding IsPinned}">
+                                            <Label Content="&#xE3E4;" Classes="iconFill" FontSize="20" Padding="0 0 8 0"
+                                                   VerticalAlignment="Center" />
+                                        </Button>
+                                        <Button Classes="panelButton" Command="{Binding CloseWindowCommand}"
+                                                Padding="7 0 0 0" VerticalAlignment="Stretch" Margin="0 0 0 -0.5"
+                                                CornerRadius="2">
+                                            <Label Content="&#xE4F6;" Classes="icon" FontSize="20" Padding="0 0 8 0"
+                                                   VerticalAlignment="Center" />
+                                        </Button>
+                                    </StackPanel>
+                                </Border>
                             </Grid>
                         </Border>
-                
-                        <Border Grid.Row="1" Background="{StaticResource PrimaryTransparentBackground}" Padding="5">
-                            <ContentControl Content="{Binding CurrentContent}"/>
+
+                        <Border Grid.Row="1" Padding="5">
+                            <ContentControl Content="{Binding CurrentContent}" />
                         </Border>
                     </Grid>
                 </Border>
-                
+
                 <Border BorderBrush="{StaticResource PanelHighlight}" CornerRadius="10"
                         BorderThickness="1"
-                        BoxShadow="0 3 20 3 #4F0F0F10"/>
-                
+                        BoxShadow="0 3 20 3 #4F0F0F10" />
+
                 <Grid ColumnDefinitions="*, Auto, *" RowDefinitions="*, Auto, *" IsVisible="{Binding IsQuickActionsOpen}">
                     <Border Grid.Column="1" Grid.Row="1" Background="{StaticResource PanelColor}" Padding="10"
                             CornerRadius="10" BorderBrush="{StaticResource PanelHighlight}" BorderThickness="2"
                             BoxShadow="0 3 10 3 #4F0F0F10">
                         <StackPanel DataContext="{Binding QuickActions}">
-                            <Label Content="{Binding CurrentTitle}" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0 -5 0 4"/>
+                            <Label Content="{Binding CurrentTitle}" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0 -5 0 4" />
                             <ItemsControl ItemsSource="{Binding DisplayedCommands}">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
                                         <Button Padding="0 0 10 0" HorizontalAlignment="Stretch"
                                                 Command="{Binding $parent[ItemsControl].((cpvm:CommandPaletteViewModel)DataContext).SelectCommandByButtonCommand}"
                                                 CommandParameter="{Binding}" Focusable="False"
-                                                Click="QuickActionButton_OnClick" Classes="quickActionButton">  
-                                            <Grid ColumnDefinitions="20, *"> 
+                                                Click="QuickActionButton_OnClick" Classes="quickActionButton">
+                                            <Grid ColumnDefinitions="20, *">
                                                 <Label Grid.Column="0" Focusable="False"
-                                                       Content="{Binding Index}" HorizontalAlignment="Right" VerticalAlignment="Center" Foreground="{StaticResource SecondaryText}"/> 
-                                                <Label Grid.Column="1" Content="{Binding Name}" HorizontalAlignment="Left" VerticalAlignment="Center" Foreground="{StaticResource PrimaryText}"/> 
+                                                       Content="{Binding Index}" HorizontalAlignment="Right" VerticalAlignment="Center" Foreground="{StaticResource SecondaryText}" />
+                                                <Label Grid.Column="1" Content="{Binding Name}" HorizontalAlignment="Left" VerticalAlignment="Center" Foreground="{StaticResource PrimaryText}" />
                                             </Grid>
-                                        </Button> 
+                                        </Button>
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
@@ -103,31 +173,31 @@
                 </Grid>
             </Grid>
         </Border>
-        
+
         <!-- Corner resize handles -->
-        <Thumb x:Name="TL" DragDelta="Thumb_OnDrag" DragStarted="Thumb_OnDragStarted" DragCompleted="Thumb_OnDragCompleted" Cursor="TopLeftCorner"     Background="Transparent" Theme="{StaticResource ThumbTheme}" Grid.Row="0" Grid.Column="0"/>
-        <Thumb x:Name="TR" DragDelta="Thumb_OnDrag" DragStarted="Thumb_OnDragStarted" DragCompleted="Thumb_OnDragCompleted" Cursor="TopRightCorner"    Background="Transparent" Theme="{StaticResource ThumbTheme}" Grid.Row="0" Grid.Column="2"/>
-        <Thumb x:Name="BR" DragDelta="Thumb_OnDrag" DragStarted="Thumb_OnDragStarted" DragCompleted="Thumb_OnDragCompleted" Cursor="BottomRightCorner" Background="Transparent" Theme="{StaticResource ThumbTheme}" Grid.Row="2" Grid.Column="2"/>
-        <Thumb x:Name="BL" DragDelta="Thumb_OnDrag" DragStarted="Thumb_OnDragStarted" DragCompleted="Thumb_OnDragCompleted" Cursor="BottomLeftCorner"  Background="Transparent" Theme="{StaticResource ThumbTheme}" Grid.Row="2" Grid.Column="0"/>
-        
+        <Thumb x:Name="TL" DragDelta="Thumb_OnDrag" DragStarted="Thumb_OnDragStarted" DragCompleted="Thumb_OnDragCompleted" Cursor="TopLeftCorner" Background="Transparent" Theme="{StaticResource ThumbTheme}" Grid.Row="0" Grid.Column="0" />
+        <Thumb x:Name="TR" DragDelta="Thumb_OnDrag" DragStarted="Thumb_OnDragStarted" DragCompleted="Thumb_OnDragCompleted" Cursor="TopRightCorner" Background="Transparent" Theme="{StaticResource ThumbTheme}" Grid.Row="0" Grid.Column="2" />
+        <Thumb x:Name="BR" DragDelta="Thumb_OnDrag" DragStarted="Thumb_OnDragStarted" DragCompleted="Thumb_OnDragCompleted" Cursor="BottomRightCorner" Background="Transparent" Theme="{StaticResource ThumbTheme}" Grid.Row="2" Grid.Column="2" />
+        <Thumb x:Name="BL" DragDelta="Thumb_OnDrag" DragStarted="Thumb_OnDragStarted" DragCompleted="Thumb_OnDragCompleted" Cursor="BottomLeftCorner" Background="Transparent" Theme="{StaticResource ThumbTheme}" Grid.Row="2" Grid.Column="0" />
+
         <!-- Edge resize handles -->
-        <Thumb x:Name="L" DragDelta="Thumb_OnDrag" DragStarted="Thumb_OnDragStarted" DragCompleted="Thumb_OnDragCompleted" Cursor="SizeWestEast"   Background="Transparent" Theme="{StaticResource ThumbTheme}" Grid.Row="1" Grid.Column="0"/>
-        <Thumb x:Name="T" DragDelta="Thumb_OnDrag" DragStarted="Thumb_OnDragStarted" DragCompleted="Thumb_OnDragCompleted" Cursor="SizeNorthSouth" Background="Transparent" Theme="{StaticResource ThumbTheme}" Grid.Row="0" Grid.Column="1"/>
-        <Thumb x:Name="R" DragDelta="Thumb_OnDrag" DragStarted="Thumb_OnDragStarted" DragCompleted="Thumb_OnDragCompleted" Cursor="SizeWestEast"   Background="Transparent" Theme="{StaticResource ThumbTheme}" Grid.Row="1" Grid.Column="2"/>
-        <Thumb x:Name="B" DragDelta="Thumb_OnDrag" DragStarted="Thumb_OnDragStarted" DragCompleted="Thumb_OnDragCompleted" Cursor="SizeNorthSouth" Background="Transparent" Theme="{StaticResource ThumbTheme}" Grid.Row="2" Grid.Column="1"/>
+        <Thumb x:Name="L" DragDelta="Thumb_OnDrag" DragStarted="Thumb_OnDragStarted" DragCompleted="Thumb_OnDragCompleted" Cursor="SizeWestEast" Background="Transparent" Theme="{StaticResource ThumbTheme}" Grid.Row="1" Grid.Column="0" />
+        <Thumb x:Name="T" DragDelta="Thumb_OnDrag" DragStarted="Thumb_OnDragStarted" DragCompleted="Thumb_OnDragCompleted" Cursor="SizeNorthSouth" Background="Transparent" Theme="{StaticResource ThumbTheme}" Grid.Row="0" Grid.Column="1" />
+        <Thumb x:Name="R" DragDelta="Thumb_OnDrag" DragStarted="Thumb_OnDragStarted" DragCompleted="Thumb_OnDragCompleted" Cursor="SizeWestEast" Background="Transparent" Theme="{StaticResource ThumbTheme}" Grid.Row="1" Grid.Column="2" />
+        <Thumb x:Name="B" DragDelta="Thumb_OnDrag" DragStarted="Thumb_OnDragStarted" DragCompleted="Thumb_OnDragCompleted" Cursor="SizeNorthSouth" Background="Transparent" Theme="{StaticResource ThumbTheme}" Grid.Row="2" Grid.Column="1" />
     </Grid>
-    
+
     <UserControl.Styles>
         <Style Selector="Border.windowContainer">
-            <Setter Property="BoxShadow" Value="inset 0 0 0 0 #6FFF0000"/>
+            <Setter Property="BoxShadow" Value="inset 0 0 0 0 #6FFF0000" />
             <Setter Property="Transitions">
                 <Transitions>
-                    <BoxShadowsTransition Property="BoxShadow" Duration="0:0:0.15" Easing="CubicEaseOut"/>
+                    <BoxShadowsTransition Property="BoxShadow" Duration="0:0:0.15" Easing="CubicEaseOut" />
                 </Transitions>
             </Setter>
         </Style>
         <Style Selector="Border.windowContainer:focus-within">
-            <Setter Property="BoxShadow" Value="inset 0 0 200 10 #6FFF0000"/>
+            <Setter Property="BoxShadow" Value="inset 0 0 200 10 #6FFF0000" />
         </Style>
     </UserControl.Styles>
 </UserControl>

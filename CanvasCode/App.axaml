@@ -49,8 +49,11 @@
         <SolidColorBrush x:Key="PrimaryAccentColor">#E0634A</SolidColorBrush>
         
         <SolidColorBrush x:Key="PrimaryBackground">#1E1F22</SolidColorBrush>
-        <SolidColorBrush x:Key="PrimaryTransparentBackground">#CF1E1F22</SolidColorBrush>
         <SolidColorBrush x:Key="PrimarySeparator">#7F3C3F45</SolidColorBrush>
+        
+        <SolidColorBrush x:Key="PrimaryTransparentBackground">#CF1E1F22</SolidColorBrush>
+        <SolidColorBrush x:Key="SecondaryTransparentBackground">#CF101010</SolidColorBrush>
+        <SolidColorBrush x:Key="TransparentHighlight">#2FFFFFFF</SolidColorBrush>
         
         <SolidColorBrush x:Key="PrimaryHover">#7F3C3F45</SolidColorBrush>
         

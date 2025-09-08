@@ -148,7 +148,7 @@ public partial class MainWindow : Window {
 			else if(fnvm.Parent != null) fnvm.Parent.IsDropTarget = false;
 		}
 
-		string[]? files = e.Data.Get("Files") as string[];
+		string[]? files = e.Data.Get(DataFormats.FileNames) as string[];
 		if (files == null) {
 			var data = e.Data.GetFiles();
 			if (data is null) return;

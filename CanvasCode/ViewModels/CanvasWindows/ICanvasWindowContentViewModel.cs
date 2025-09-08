@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using CanvasCode.Models.CanvasWindows;
 using CanvasCode.Models.CommandPalettes;
 
@@ -15,4 +16,6 @@ public interface ICanvasWindowContentViewModel {
 	public void SetState(ICanvasContentState state);
 
 	public List<CommandPaletteItem> GetQuickActions();
+	
+	public event Action<ICanvasContentState> OnStateChanged;
 }
