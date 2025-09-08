@@ -34,11 +34,6 @@ public partial class MainWindow : Window {
 		
 		titleBarTimer = new Timer(ShowTitleBar, null, Timeout.Infinite, Timeout.Infinite);
 		
-		AddHandler(DragDrop.DragOverEvent, DragOver);
-		AddHandler(DragDrop.DropEvent, Drop);
-		AddHandler(DragDrop.DragEnterEvent, DragEnter);
-		AddHandler(DragDrop.DragLeaveEvent, DragLeave);
-		
 		CanvasShader.SetUniform("posx", (float)MainCanvas.OffsetX);
 		CanvasShader.SetUniform("posy", (float)MainCanvas.OffsetY);
 		CanvasShader.SetUniform("hover_posx", 0);
@@ -85,132 +80,25 @@ public partial class MainWindow : Window {
 
 	
 	
-	static Control? prevDragControl = null;
-	
-	private void DragEnter(object? sender, DragEventArgs e) {
-		if (e.Source is not Control c) return;
-
-		if (c.DataContext is CanvasFolderTreeViewModel ftvm) {
-			ftvm.IsDraggingOverRoot = true;
-		}else if (c.DataContext is FileNodeViewModel fnvm) {
-			if (fnvm.Model.IsDirectory) fnvm.IsDropTarget = true;
-			else if (fnvm.Parent != null) fnvm.Parent.IsDropTarget = true;
-		}
-		
-		if (c.DataContext is MainWindowViewModel) {
-			var pos = e.GetPosition(this);
-			CanvasShader.SetUniform("hover_posx", (float)pos.X - (float)MainCanvas.OffsetX);
-			CanvasShader.SetUniform("hover_posy", (float)pos.Y - (float)MainCanvas.OffsetY);
-			StartShaderDragDropEffect();
-		}
-		
-		c = c.FindAncestorOfType<Border>(includeSelf: true) ?? c;
-		c.Classes.Add("dragOver");
-		prevDragControl = c;
-	}
-	private void DragOver(object? sender, DragEventArgs e) {
-		if (e.Source is not Control c) return;
-		
-		// If dragging over shader
-		if (c.DataContext is not MainWindowViewModel _) return; 
-		
+	private bool shaderDragDropEffectStarted = false;
+	public void StartShaderDragDropEffect(DragEventArgs e) {
 		var pos = e.GetPosition(this);
 		CanvasShader.SetUniform("hover_posx", (float)pos.X - (float)MainCanvas.OffsetX);
 		CanvasShader.SetUniform("hover_posy", (float)pos.Y - (float)MainCanvas.OffsetY);
-		CanvasShader.SetUniform("hover_end_time", App.GetCurrentTime() + 10000f);
-	}
-	private void DragLeave(object? sender, DragEventArgs e) {
-		if (e.Source is not Control c) return;
-
-		if (prevDragControl.DataContext is CanvasFolderTreeViewModel ftvm) {
-			ftvm.IsDraggingOverRoot = false;
-		}else if (prevDragControl.DataContext is FileNodeViewModel fnvm) {
-			if (fnvm.Model.IsDirectory) fnvm.IsDropTarget = false;
-			else if (fnvm.Parent != null) fnvm.Parent.IsDropTarget = false;
-		}
 		
-		if (c.DataContext is MainWindowViewModel) {
-			StopShaderDragDropEffect();
-		}
-		
-		c = c.FindAncestorOfType<Border>(includeSelf: true) ?? c;
-		c.Classes.Remove("dragOver");
-	}
-	
-	private void Drop(object? sender, DragEventArgs e) {
-		prevDragControl?.Classes.Remove("dragOver");
-		if (prevDragControl is { DataContext: MainWindowViewModel _ }) {
-			StopShaderDragDropEffect();
-		}
-
-		if (prevDragControl?.DataContext is FileNodeViewModel fnvm) {
-			if (fnvm.Model.IsDirectory) fnvm.IsDropTarget = false;
-			else if(fnvm.Parent != null) fnvm.Parent.IsDropTarget = false;
-		}
-
-		string[]? files = e.Data.Get(DataFormats.FileNames) as string[];
-		if (files == null) {
-			var data = e.Data.GetFiles();
-			if (data is null) return;
-
-			files = data
-			        .Select(item => item.TryGetLocalPath())
-			        .Where(path => path is not null)
-			        .ToArray()!;	
-		}
-
-		if (files.Length <= 0) return;
-		
-		if (e.Source is not Control c) return;
-		
-		switch (c.DataContext) {
-			case FileNodeViewModel fvm:
-				var parentWindowView = c.FindAncestorOfType<CanvasWindowView>(includeSelf: true);
-
-				if (parentWindowView?.DataContext is CanvasWindowViewModel parentWindowVM) {
-					App.Messenger.Send(new RequestFocusMessage(parentWindowVM));
-				}
-				
-				if (fvm.Model.IsDirectory) {
-					App.FolderService.Move(files[0], fvm.Model.FullPath);
-				} else {
-					var parentPath = Path.GetDirectoryName(fvm.Model.FullPath);
-					if (parentPath == null) return;
-					App.FolderService.Move(files[0], parentPath);
-				}
-				
-				break;
-			
-			case CanvasFolderTreeViewModel ftvm:
-				ftvm.IsDraggingOverRoot = false;
-				
-				if (ftvm.OpenFolderRoots.Count <= 0) return;
-
-				App.Messenger.Send(new RequestFocusMessage(ftvm.ParentWindow));
-				
-				App.FolderService.Move(files[0], ftvm.OpenFolderRoots[0].Model.FullPath);
-				break;
-			
-			case MainWindowViewModel mvm: {
-				var attr = File.GetAttributes(files[0]);
-				var type = attr.HasFlag(FileAttributes.Directory) ? CanvasWindowType.FolderTree : CanvasWindowType.CodeEditor;
-			
-				mvm.OpenNewWindow(e.GetPosition(WindowsItemsControl), files, type: type);
-				break;
-			}
-		}
-	}
-
-	private bool shaderDragDropEffectStarted = false;
-	private void StartShaderDragDropEffect() {
 		shaderDragDropEffectStarted = true;
 		
 		CanvasShader.SetUniform("hover_start_time", App.GetCurrentTime());
 		CanvasShader.SetUniform("hover_end_time", App.GetCurrentTime() + 10000f);
 		CanvasShader.AnimationFrameRate = 144;
 	}
-
-	private void StopShaderDragDropEffect() {
+	public void UpdateShaderDragDropEffect(DragEventArgs e) {
+		var pos = e.GetPosition(this);
+		CanvasShader.SetUniform("hover_posx", (float)pos.X - (float)MainCanvas.OffsetX);
+		CanvasShader.SetUniform("hover_posy", (float)pos.Y - (float)MainCanvas.OffsetY);
+		CanvasShader.SetUniform("hover_end_time", App.GetCurrentTime() + 10000f);
+	}
+	public void StopShaderDragDropEffect() {
 		shaderDragDropEffectStarted = false;
 		CanvasShader.SetUniform("hover_end_time", App.GetCurrentTime());
 		Task.Delay(1000).ContinueWith(_ => {

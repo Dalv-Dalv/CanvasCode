@@ -163,8 +163,6 @@ public partial class CanvasFolderTreeViewModel : ViewModelBase, IDisposable, ICa
 		if (!DragDropManager.TryGetFiles(e, out var filePaths)) return;
 		
 		App.Messenger.Send(new RequestFocusMessage(ParentWindow));
-		
-		Debug.Assert(filePaths != null, nameof(filePaths) + " != null");
 		App.FolderService.Move(filePaths[0], OpenFolderRoots[0].Model.FullPath);
 	}
 }

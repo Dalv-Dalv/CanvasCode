@@ -37,14 +37,12 @@ public static class DragDropManager {
 	private static void DragOver(object? sender, DragEventArgs e) {
 		if (e.Source is not Control c) return;
 		if (c.DataContext is not IDragDropInteractable dragDropInteractable) return;
-		Console.WriteLine($"DragDropManager: Drag over {c.DataContext}");
 		
 		dragDropInteractable.OnDragDropHover(e);
 	}
 	private static void DragLeave(object? sender, DragEventArgs e) {
 		if (e.Source is not Control c) return;
 		if (c.DataContext is not IDragDropInteractable dragDropInteractable) return;
-		Console.WriteLine($"DragDropManager: Drag left {c.DataContext}");
 		
 		dragDropInteractable.OnDragDropExit(e);
 		c = c.FindAncestorOfType<Border>(includeSelf: true) ?? c;
@@ -56,10 +54,7 @@ public static class DragDropManager {
 	private static void Drop(object? sender, DragEventArgs e) {
 		if (e.Source is not Control c) return;
 		if (c.DataContext is not IDragDropInteractable dragDropInteractable) return;
-		Console.WriteLine($"DragDropManager: DROPPED over {c.DataContext}");
 
-		// TODO: Debug why this would be needed
-		// prevInteractable?.OnDragDropExit(e);
 		prevControl?.Classes.Remove("dragOver");
 		
 		dragDropInteractable.ReceiveDrop(e);

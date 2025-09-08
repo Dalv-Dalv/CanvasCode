@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Input;
 using Avalonia.Platform.Storage;
 using CanvasCode.Models;
 using CanvasCode.Others;
@@ -18,7 +19,8 @@ using CommunityToolkit.Mvvm.Messaging;
 
 namespace CanvasCode.ViewModels;
 
-public partial class MainWindowViewModel : ViewModelBase, IRecipient<EnterFullscreenMessage>, IRecipient<ExitFullscreenMessage> {
+public partial class MainWindowViewModel : ViewModelBase, IRecipient<EnterFullscreenMessage>, IRecipient<ExitFullscreenMessage>,
+										   IDragDropInteractable {
 	
 	[ObservableProperty] private string? currentFolder = null;
 	[ObservableProperty] private bool isFullscreen;
@@ -89,5 +91,25 @@ public partial class MainWindowViewModel : ViewModelBase, IRecipient<EnterFullsc
 	public void Receive(ExitFullscreenMessage message) {
 		IsFullscreen = false;
 		FullscreenContent = null;
+	}
+
+	public void OnDragDropEnter(DragEventArgs e) {
+		MainWindow.Instance.StartShaderDragDropEffect(e);	
+	}
+	public void OnDragDropHover(DragEventArgs e) {
+		MainWindow.Instance.UpdateShaderDragDropEffect(e);
+	}
+	public void OnDragDropExit(DragEventArgs e) {
+		MainWindow.Instance.StopShaderDragDropEffect();
+	}
+	public void ReceiveDrop(DragEventArgs e) {
+		MainWindow.Instance.StopShaderDragDropEffect();
+		
+		if (!DragDropManager.TryGetFiles(e, out var filePaths)) return;
+
+		var attr = File.GetAttributes(filePaths[0]);
+		var type = attr.HasFlag(FileAttributes.Directory) ? CanvasWindowType.FolderTree : CanvasWindowType.CodeEditor;
+
+		OpenNewWindow(e.GetPosition(MainWindow.Instance.WindowsItemsControl), filePaths, type: type);
 	}
 }

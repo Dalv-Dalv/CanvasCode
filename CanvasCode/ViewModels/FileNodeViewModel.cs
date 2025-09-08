@@ -5,11 +5,13 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Avalonia.Controls;
+using Avalonia.Input;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 using CanvasCode.Models;
 using CanvasCode.Others;
 using CanvasCode.Services;
+using CanvasCode.ViewModels.CanvasWindows;
 using CanvasCode.Views.CanvasWindows;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -19,7 +21,8 @@ namespace CanvasCode.ViewModels;
 
 public partial class FileNodeViewModel : ViewModelBase, 
                                          IRecipient<FolderContentsChangedMessage>,
-                                         IRecipient<FileRenamedMessage>, IDisposable {
+                                         IRecipient<FileRenamedMessage>, IDisposable,
+										 IDragDropInteractable{
 	private readonly FolderDataService? folderService = null;
 	private readonly IMessenger? messenger = null;
 
@@ -243,5 +246,38 @@ public partial class FileNodeViewModel : ViewModelBase,
 	
 	public override string ToString() {
 		return Model.Name;
+	}
+
+	public void OnDragDropEnter(DragEventArgs e) {
+		if (Model.IsDirectory) IsDropTarget = true;
+		else if (Parent != null) Parent.IsDropTarget = true;
+	}
+	public void OnDragDropHover(DragEventArgs e) {}
+	public void OnDragDropExit(DragEventArgs e) {
+		if (Model.IsDirectory) IsDropTarget = false;
+		else if (Parent != null) Parent.IsDropTarget = false;
+	}
+	public void ReceiveDrop(DragEventArgs e) {
+		OnDragDropExit(e);
+		
+		if (!DragDropManager.TryGetFiles(e, out var filePaths)) return;
+		
+		
+		if (Model.IsDirectory) {
+			App.FolderService.Move(filePaths[0], Model.FullPath);
+		} else {
+			var parentPath = Path.GetDirectoryName(Model.FullPath);
+			if (parentPath == null) return;
+			App.FolderService.Move(filePaths[0], parentPath);
+		}
+		
+		
+		// Give focus back to the window
+		if (e.Source is not Control c) return;
+		var parentWindowView = c.FindAncestorOfType<CanvasWindowView>(includeSelf: true);
+
+		if (parentWindowView?.DataContext is CanvasWindowViewModel parentWindowVM) {
+			App.Messenger.Send(new RequestFocusMessage(parentWindowVM));
+		}
 	}
 }
