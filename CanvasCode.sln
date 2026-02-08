@@ -2,7 +2,7 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CanvasCode", "CanvasCode\CanvasCode.csproj", "{C6323615-7113-43BB-996F-EB7959F5407A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AvaloniaEdit", "..\AvaloniaEdit-master\src\AvaloniaEdit\AvaloniaEdit.csproj", "{66D656FE-7779-482C-A416-1D56B1D8D0A6}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AvaloniaEdit", "AvaloniaEdit-master\src\AvaloniaEdit\AvaloniaEdit.csproj", "{66D656FE-7779-482C-A416-1D56B1D8D0A6}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

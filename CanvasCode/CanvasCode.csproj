@@ -40,6 +40,6 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\..\AvaloniaEdit-master\src\AvaloniaEdit\AvaloniaEdit.csproj" />
+      <ProjectReference Include="..\AvaloniaEdit-master\src\AvaloniaEdit\AvaloniaEdit.csproj" />
     </ItemGroup>
 </Project>
