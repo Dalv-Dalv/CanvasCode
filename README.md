@@ -23,7 +23,7 @@ Instead of docked panels and fixed layouts, CanvasCode gives you a canvas. You d
 
 **Clone**
 ```bash
-git clone <repo-url>
+git clone https://github.com/Dalv-Dalv/CanvasCode
 cd CanvasCode-master
 ```
 
