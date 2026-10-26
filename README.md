@@ -1,5 +1,8 @@
 # CanvasCode
 
+<img width="1914" height="980" alt="image" src="https://github.com/user-attachments/assets/1f0e8d40-4a10-4a25-a671-5ddfe494fd0f" />
+
+
 A desktop app for developers who think spatially. Inspired by [PureRef](https://www.pureref.com/) and [The Farmer Was Replaced](https://store.steampowered.com/app/2060160/The_Farmer_Was_Replaced/), CanvasCode replaces the traditional single-window IDE layout with a free-form canvas where you can arrange code editors, file trees, and shader previews however you like.
 
 > **Very early in development** expect rough edges and lots of missing features.
